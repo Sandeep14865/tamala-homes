@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useInView, useReducedMotion, LayoutGroup } from 'framer-motion';
 import { Link, BASE, Words, Rise, Picture, Counter, Arrow, EASE, SPRING, useMedia } from './lib.jsx';
-import { Nav, Hero, Viz, Head, Visit, Footer, gmaps } from './components.jsx';
+import { Nav, Hero, Head, Visit, Footer, gmaps } from './components.jsx';
 import { PROJECTS, MAP } from './data.js';
 import { PAGES, ORDER, STAGES, AMENITIES } from './content.js';
+import { Dial } from './Dial.jsx';
 
 const LINKS = [['Projects', '#projects'], ['Locations', '#map'], ['Building', '#build'], ['Amenities', '#amenities']];
 const TOWERS = Object.values(PROJECTS).reduce((a, p) => a + p.towers.length, 0);
@@ -59,18 +60,10 @@ function Projects() {
   );
 }
 
-/* ---------- map: pick a project, see its drive times, point at a landmark to light its route ---------- */
+/* ---------- map: pick a project, see its drive times on the dial, point at a place to light its spoke ---------- */
 function MapSection() {
   const [sel, setSel] = useState('arundelpet');
   const [hot, setHot] = useState(-1);
-  const view = useRef(null), selRef = useRef(sel);
-  selRef.current = sel;
-  useEffect(() => { view.current && view.current.select(sel); }, [sel]);
-  useEffect(() => { view.current && view.current.highlight(hot); }, [hot]);
-  const load = useCallback(async el => {
-    const { mountMap } = await import('./three/map.js');
-    return mountMap(el, { select: k => setSel(k) });
-  }, []);
   const p = PAGES[sel];
   return (
     <section className="section section--surface" id="map" aria-labelledby="map-h">
@@ -106,8 +99,7 @@ function MapSection() {
               <a className="link" href={gmaps(`${p.place}, Guntur, Andhra Pradesh`)} target="_blank" rel="noopener">Open in Google Maps<Arrow /></a>
             </p>
           </div>
-          <Viz kind="map" what="map" poster={BASE + "/media/posters/map.webp"} alt="A 3D map of Guntur with the three Tamala projects marked" load={load}
-            onView={v => { view.current = v; v && v.select(selRef.current); }} />
+          <Dial sel={sel} setSel={setSel} hot={hot} setHot={setHot} />
         </div>
       </div>
     </section>

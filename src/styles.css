@@ -215,6 +215,51 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
 .picks button[aria-pressed="true"] { color: var(--ink); padding-left: 24px; }
 .picks__dot { position: absolute; left: 0; top: 50%; width: 10px; height: 10px; margin-top: -5px; border-radius: 50%; background: var(--accent); }
 
+/* ---------- drive-time dial (map section) ---------- */
+.dial { position: relative; margin: 0; width: min(100%, 78vh); justify-self: end; aspect-ratio: 1; container: dial / inline-size;
+  border-radius: var(--r-lg); background: radial-gradient(circle at 50% 50%, #fff 0%, var(--bg) 62%); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
+.split--viz > .dial { position: sticky; top: 12vh; }
+.dial svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.dial__ring { fill: none; stroke: color-mix(in oklab, var(--ink) 13%, transparent); stroke-width: 1; stroke-dasharray: 2 5; }
+.dial__ring.is-outer { stroke-dasharray: none; }
+.dial__tick { font: 500 12px/1 var(--text); fill: var(--muted); paint-order: stroke; stroke: var(--bg); stroke-width: 5px; font-variant-numeric: tabular-nums; }
+.dial__spoke { stroke: color-mix(in oklab, var(--ink) 32%, transparent); stroke-width: 1.25; transition: stroke .25s, stroke-width .25s; }
+.dial__spoke.is-on { stroke: var(--accent); stroke-width: 2.5; }
+.dial__dot { fill: var(--ink); stroke: var(--bg); stroke-width: 3; transition: fill .25s; }
+.dial__dot.is-on { fill: var(--accent); }
+.dial__home { fill: var(--accent); stroke: #fff; stroke-width: 3; }
+.dial__pulse { fill: var(--accent); opacity: .18; transform-box: fill-box; transform-origin: center; }
+.dial__label, .dial__jump { position: absolute; left: 0; top: 0; display: flex; align-items: baseline; gap: 6px; white-space: nowrap;
+  padding: 6px 9px 5px; border-radius: 999px; font-size: 0.8125rem; line-height: 1; color: var(--ink);
+  background: rgb(255 255 255 / .82); box-shadow: 0 0 0 1px var(--line), 0 6px 16px -10px rgb(15 35 29 / .45);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); transition: background-color .25s, color .25s, scale .2s var(--ease); }
+.dial__label b { font-weight: 600; color: var(--accent); }
+.dial__label.is-on { background: var(--accent); color: #fff; z-index: 2; }
+.dial__label.is-on b { color: #fff; }
+.dial__label:active, .dial__jump:active { scale: .95; }
+.dial__jump { background: var(--dark); color: var(--cream); box-shadow: none; font-weight: 500; }
+.dial__jump::before { content: ""; width: 7px; height: 7px; rotate: 45deg; border: 1.5px solid var(--turmeric); align-self: center; }
+.dial__jump:hover { background: var(--accent); }
+.dial__from { position: absolute; left: 22px; top: 18px; display: grid; gap: 4px; pointer-events: none; }
+.dial__from small { font-size: 0.8125rem; color: var(--muted); }
+.dial__from strong { font: 600 clamp(24px, 4.6cqi, 34px)/1 var(--display); font-stretch: 76%; letter-spacing: -0.02em; color: var(--ink); }
+.dial__north { position: absolute; right: 20px; top: 18px; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%;
+  font: 600 12px/1 var(--text); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.dial__north::before { content: ""; position: absolute; top: -5px; border: 4px solid transparent; border-bottom: 6px solid var(--turmeric); }
+.dial__key { position: absolute; left: 22px; bottom: 16px; right: 22px; font-size: 0.8125rem; color: var(--muted); }
+.dial__key b { color: var(--ink); font-weight: 600; }
+@media (prefers-reduced-motion: no-preference) {
+  .dial__pulse { animation: dial-pulse 2.6s var(--ease) infinite; }
+  @keyframes dial-pulse { from { scale: .7; opacity: .35; } to { scale: 2.6; opacity: 0; } }
+}
+/* small dial: places show just their minutes; the name appears in the caption when one is chosen */
+@container dial (max-width: 520px) {
+  .dial__name, .dial__jump { display: none; }
+  .dial__tick { font-size: 21px; stroke-width: 8px; }
+  .dial__label, .dial__jump { font-size: 0.75rem; padding: 5px 7px 4px; }
+  .dial__from { left: 16px; top: 14px; } .dial__north { right: 14px; top: 14px; } .dial__key { left: 16px; bottom: 12px; }
+}
+
 /* ---------- 3D stages ---------- */
 .viz { position: relative; overflow: hidden; border-radius: var(--r-lg); background: var(--dark); height: clamp(420px, 72vh, 700px); }
 .split--viz > .viz { position: sticky; top: 12vh; }
@@ -224,10 +269,6 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
 .viz > .viz__canvas:active { cursor: grabbing; }
 .viz__labels { position: absolute; inset: 0; pointer-events: none; }
 .viz__label { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 0.8125rem; font-weight: 500; line-height: 1; padding: 6px 8px 5px; border-radius: 4px; background: var(--cream); color: var(--dark); transition: background-color .2s, color .2s; }
-.viz__label--place { display: flex; gap: 8px; background: rgb(15 35 29 / .78); color: #eef0e8; font-weight: 400; border: 1px solid rgb(241 242 236 / .22); }
-.viz__label--place b { font-weight: 600; color: var(--turmeric); font-variant-numeric: tabular-nums; }
-.viz__label--place.is-on { background: var(--cream); color: var(--dark); border-color: var(--cream); z-index: 1; }
-.viz__label--place.is-on b { color: var(--dark); }
 .viz__label--project.is-on { background: var(--accent-2); color: #fff; }
 .viz__label--room { background: rgb(15 35 29 / .74); color: #eef0e8; padding: 5px 7px 4px; }
 .viz__label--room.is-on { background: var(--turmeric); color: var(--dark); }
@@ -381,8 +422,8 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
   .nav__links, .nav__cta { display: none; }
   .nav__toggle { display: block; }
   .split, .split--viz, .stages { grid-template-columns: 1fr; }
+  .split--viz > .dial { position: relative; top: 0; width: 100%; justify-self: stretch; }
   .split--viz > .viz { position: relative; top: 0; order: -1; height: min(74vw, 480px); }
-  .viz__label--place:not(.is-on) { display: none; }
   .fill { min-height: 0; height: auto; }
   .pic.fill { aspect-ratio: 4 / 3; }
   .gmap { min-height: 0; aspect-ratio: 4 / 3; }

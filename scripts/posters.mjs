@@ -8,7 +8,6 @@ import { join } from 'node:path';
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const BASE = 'http://localhost:5173';
 const JOBS = [
-  { page: '/', section: '#map', shots: [['map', 'map']] },
   { page: '/projects/arundelpet', section: '#availability', shots: [['tower', 'tower-arundelpet']] },
   { page: '/projects/arundelpet', section: '#plans', shots: [['plan', 'plan']] },
   { page: '/projects/amaravati-road', section: '#availability', shots: [['tower', 'tower-amaravati-road']] },

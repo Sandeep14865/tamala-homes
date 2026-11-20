@@ -103,7 +103,7 @@ export const PLANS = {
   },
 };
 
-// The home page's 3D Guntur map. Positions are a stylised layout of the city, not survey data.
+// The home page's drive-time dial. Positions are a stylised layout of the city, not survey data: they set each place's direction.
 // x: west (-) to east (+), z: north (-) to south (+), in map units.
 export const MAP = {
   projects: [
@@ -117,12 +117,5 @@ export const MAP = {
     { name: 'Brodipet',                   x: -5,  z: 5,   min: { arundelpet: 8, 'amaravati-road': 18, gorantla: 17 } },
     { name: 'Inner Ring Road',            x: -9,  z: -6,  min: { arundelpet: 12, 'amaravati-road': 10, gorantla: 5 } },
     { name: 'NH-16 junction',             x: 15,  z: 2,   min: { arundelpet: 11, 'amaravati-road': 9, gorantla: 20 } },
-  ],
-  // roads as polylines
-  roads: [
-    { name: 'Amaravati Road', pts: [[1, 2], [6, -3], [11, -9], [16, -16]] },
-    { name: 'NH-16', pts: [[13, 18], [15, 2], [17, -12], [19, -20]] },
-    { name: 'Inner Ring Road', pts: [[-6, 12], [-11, 2], [-9, -8], [-3, -15], [6, -16], [14, -12]] },
-    { name: 'Rail line', pts: [[-18, 6], [0, 3], [18, -1]], rail: true },
   ],
 };
