@@ -85,7 +85,7 @@ export const LEGAL = {
       [null, 'When you book a site visit we receive your name, your phone number, the project and the day you chose. We use them only to call you about that visit and the flat you asked about.'],
       ['Who sees your details', 'Our sales office in Brodipet. We do not sell or pass your details to anyone else.'],
       ['How long we keep them', 'Twelve months after your last visit, unless you buy a flat, when they become part of your sale file.'],
-      ['Maps', 'Project pages show a Google map. Google receives your request when that map loads.'],
+      ['Maps', 'The home page and the project pages show a Google map. Google receives your request when that map loads.'],
       ['Removing your details', 'Ask us on WhatsApp or by phone and we delete them within a week.'],
     ],
   },

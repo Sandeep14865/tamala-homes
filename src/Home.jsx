@@ -6,7 +6,6 @@ import { Link, BASE, Words, Rise, Picture, Counter, Arrow, EASE, SPRING, useMedi
 import { Nav, Hero, Head, Visit, Footer, gmaps } from './components.jsx';
 import { PROJECTS, MAP } from './data.js';
 import { PAGES, ORDER, STAGES, AMENITIES } from './content.js';
-import { Dial } from './Dial.jsx';
 
 const LINKS = [['Projects', '#projects'], ['Locations', '#map'], ['Building', '#build'], ['Amenities', '#amenities']];
 const TOWERS = Object.values(PROJECTS).reduce((a, p) => a + p.towers.length, 0);
@@ -60,46 +59,73 @@ function Projects() {
   );
 }
 
-/* ---------- map: pick a project, see its drive times on the dial, point at a place to light its spoke ---------- */
+/* ---------- map: a tab per project over a Google map; pick a landmark to see the route there ---------- */
+const enc = encodeURIComponent;
+const inGuntur = q => `${q}, Guntur, Andhra Pradesh`;
 function MapSection() {
   const [sel, setSel] = useState('arundelpet');
-  const [hot, setHot] = useState(-1);
-  const p = PAGES[sel];
+  const [to, setTo] = useState(-1);
+  const p = PAGES[sel], from = inGuntur(p.place);
+  const dest = to >= 0 ? MAP.landmarks[to] : null;
+  const src = dest
+    ? `https://www.google.com/maps?saddr=${enc(from)}&daddr=${enc(inGuntur(dest.name))}&output=embed`
+    : `https://www.google.com/maps?q=${enc(from)}&z=14&output=embed`;
+  const pick = k => { setSel(k); setTo(-1); };
+  const route = i => setTo(t => (t === i ? -1 : i));
   return (
     <section className="section section--surface" id="map" aria-labelledby="map-h">
       <div className="wrap">
-        <Head id="map-h" text="Where we build in Guntur" lead="Pick a project to see how far it is from the places you drive to every week." />
-        <div className="split split--viz">
+        <Head id="map-h" text="Where we build in Guntur" lead="Choose a project, then a place you drive to every week to see the way there." />
+        <div className="split split--viz split--map">
           <div className="panel">
-            <LayoutGroup>
-              <ul className="picks">
-                {ORDER.map((k, i) => (
-                  <Rise as="li" key={k} delay={0.07 * i}>
-                    <button type="button" aria-pressed={sel === k} onClick={() => setSel(k)}>
-                      {sel === k && <motion.i layoutId="pick-dot" className="picks__dot" transition={SPRING} />}
-                      <span>{PAGES[k].short}</span><small>{PAGES[k].status}</small>
-                    </button>
-                  </Rise>
-                ))}
-              </ul>
-            </LayoutGroup>
-            <ul className="rows rows--hover" onMouseLeave={() => setHot(-1)}>
+            <p className="map__from">Drive times from <AnimatePresence mode="popLayout" initial={false}>
+              <motion.b key={sel} initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -14, opacity: 0 }} transition={{ duration: 0.3 }}>{p.short}</motion.b>
+            </AnimatePresence></p>
+            <ul className="rows rows--hover rows--route">
               {MAP.landmarks.map((l, i) => (
-                <Rise as="li" key={l.name} delay={0.05 * i} className={hot === i ? 'is-on' : undefined} tabIndex={0}
-                  onMouseEnter={() => setHot(i)} onFocus={() => setHot(i)} onClick={() => setHot(i)}>
+                <Rise as="li" key={l.name} delay={0.05 * i} className={to === i ? 'is-on' : undefined} tabIndex={0} role="button" aria-pressed={to === i}
+                  onClick={() => route(i)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); route(i); } }}>
                   <span>{l.name}</span>
                   <span className="num"><AnimatePresence mode="popLayout" initial={false}>
                     <motion.b key={sel} initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -14, opacity: 0 }} transition={{ duration: 0.35 }}>{l.min[sel]} min</motion.b>
-                  </AnimatePresence></span>
+                  </AnimatePresence><i className="rows__go" aria-hidden="true"><Arrow /></i></span>
                 </Rise>
               ))}
             </ul>
             <p className="links">
               <Link className="link" to={`/projects/${sel}`}>See {p.short}<Arrow /></Link>
-              <a className="link" href={gmaps(`${p.place}, Guntur, Andhra Pradesh`)} target="_blank" rel="noopener">Open in Google Maps<Arrow /></a>
+              <a className="link" href={dest ? `https://www.google.com/maps/dir/?api=1&origin=${enc(from)}&destination=${enc(inGuntur(dest.name))}` : gmaps(from)} target="_blank" rel="noopener">
+                {dest ? 'Open this route in Google Maps' : 'Open in Google Maps'}<Arrow /></a>
             </p>
           </div>
-          <Dial sel={sel} setSel={setSel} hot={hot} setHot={setHot} />
+          <div className="mapcard">
+            <LayoutGroup id="map-tabs">
+              <div className="seg mapcard__tabs" role="tablist" aria-label="Projects">
+                {ORDER.map(k => (
+                  <button key={k} type="button" role="tab" aria-selected={sel === k} aria-pressed={sel === k} onClick={() => pick(k)}>
+                    {sel === k && <motion.i layoutId="map-tab" className="seg__thumb" transition={SPRING} />}
+                    <span>{PAGES[k].short}</span>
+                  </button>
+                ))}
+              </div>
+            </LayoutGroup>
+            <div className="gmap mapcard__map">
+              <AnimatePresence initial={false}>
+                <motion.iframe key={src} src={src} title={dest ? `Google map: the way from ${p.short} to ${dest.name}` : `Google map of ${p.place}, Guntur`}
+                  loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen
+                  initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.5, delay: 0.25 } }} exit={{ opacity: 0, transition: { duration: 0.3, delay: 0.6 } }} />
+              </AnimatePresence>
+            </div>
+            <div className="mapcard__note">
+              <AnimatePresence mode="wait" initial={false}>
+                {dest
+                  ? <motion.p key={`r${to}${sel}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                      The way to <b>{dest.name}</b>, about {dest.min[sel]} min by car.{' '}
+                      <button type="button" className="link" onClick={() => setTo(-1)}>Back to {p.short}</button></motion.p>
+                  : <motion.p key="hint" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>Pick a place in the list to see the way there.</motion.p>}
+              </AnimatePresence>
+            </div>
+          </div>
         </div>
       </div>
     </section>
