@@ -20,11 +20,11 @@ const SHAPES = {
 };
 // the name each shape carries, the circle it runs on (radius in a 100-unit box) and its colour
 const LABELS = {
-  pin:    { text: 'Where we build', r: 36, ink: 'var(--ink)' },
-  ring:   { text: 'Our promise',    r: 38, ink: 'var(--ink)' },        // on the band itself: the hole shows the dark section
-  brick:  { text: 'How we build',   r: 36, ink: 'var(--ink)' },
-  sun:    { text: 'Amenities',      r: 36, ink: 'var(--ink)' },
-  target: { text: 'Visit us',       r: 27, ink: 'var(--ink)' },
+  pin:    { text: 'Where we build', r: 36, ink: '#000' },
+  ring:   { text: 'Our promise',    r: 38, ink: '#000' },        // on the band itself: the hole shows the dark section
+  brick:  { text: 'How we build',   r: 36, ink: '#000' },
+  sun:    { text: 'Amenities',      r: 36, ink: '#000' },
+  target: { text: 'Visit us',       r: 27, ink: '#000' },
 };
 // the one word that slides out beside the shape on a phone
 const WORDS = { pin: 'Map', ring: 'Promise', brick: 'Build', sun: 'Amenities', target: 'Visit' };
@@ -79,9 +79,9 @@ export function Orb() {
       if (i === -2) { a = b = at[at.length - 1]; t = 0; }            // every spot has passed: rest on the last
       else if (i === -1) { a = b = at[0]; t = 0; }                   // none reached yet: wait on the first
       else { a = at[i]; b = at[i + 1]; t = clamp01((mid - a.y) / (b.y - a.y)); }
-      // on a phone the sections are short, so the shape would always be on the move: there it holds still on each spot
-      // (riding along with the page) for the first third of the way and the last quarter, and travels only in between
-      if (small < 1) t = clamp01((t - 0.32) / 0.43);
+      // the shape holds still, full size, on each spot (riding along with the page) for the first third of the way and
+      // the last quarter, so its name can be read; it travels only in between
+      t = clamp01((t - 0.32) / 0.43);
       const e = ease(t), dip = 1 - 0.68 * Math.sin(Math.PI * t);   // a dot in transit, full size at rest
       const size = lerp(a.s.size, b.s.size, e) * small * dip;
       const x = lerp(a.x, b.x, e), y = lerp(a.Y, b.Y, e);   // page coordinates
