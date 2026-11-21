@@ -295,14 +295,14 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
 .stages__inline { display: none; }
 
 /* ---------- amenities ---------- */
-.amen { border-top: 1px solid var(--line); }
-.amen button { display: grid; width: 100%; padding: 22px 0; border-bottom: 1px solid var(--line); text-align: left; color: color-mix(in oklab, var(--ink) 46%, transparent); transition: color .3s, padding-left .45s var(--ease); }
-.amen button[aria-pressed="true"] { color: var(--ink); padding-left: 18px; }
-.amen__name { font: 560 clamp(32px, 4vw, 64px)/1 var(--display); font-stretch: 76%; letter-spacing: -0.025em; }
-.amen__text { display: block; overflow: hidden; }
-.amen__text span { display: block; padding-top: 12px; max-width: 44ch; font-size: 1.125rem; color: var(--muted); }
-.amen__pics { position: relative; height: clamp(360px, 68vh, 640px); border-radius: var(--r-lg); overflow: hidden; background: var(--surface); position: sticky; top: 14vh; }
-.amen__pics img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.amenities { overflow-x: clip; }
+.roll { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(20px, 2.6vw, 40px); margin-top: clamp(8px, 2vw, 24px); }
+.roll__item { display: grid; align-content: start; gap: 22px; }
+.roll__disc { aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: var(--surface); box-shadow: 0 0 0 1px var(--line); }
+.roll__disc img { width: 100%; height: 100%; object-fit: cover; scale: 1.02; transition: scale .8s var(--ease); }
+.roll__item:hover .roll__disc img { scale: 1.1; }
+.roll__text h3 { font: 560 clamp(26px, 2.4vw, 38px)/1 var(--display); font-stretch: 76%; letter-spacing: -0.02em; }
+.roll__text p { margin-top: 10px; max-width: 30ch; color: var(--muted); }
 
 /* ---------- form ---------- */
 .form { display: grid; gap: 26px; }
@@ -424,7 +424,9 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
   .stages__steps li:first-child { padding-top: 0; }
   .stages__steps li { opacity: 1 !important; }
   .stages__inline { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: var(--r-lg); margin-top: 8px; }
-  .amen__pics { position: relative; top: 0; height: auto; aspect-ratio: 4 / 3; order: -1; }
+  .roll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: calc(var(--gut) * -1); padding-inline: var(--gut); scroll-padding-inline: var(--gut); }
+  .roll::-webkit-scrollbar { display: none; }
+  .roll__item { flex: 0 0 min(72vw, 320px); scroll-snap-align: start; }
   .pcard__pic { height: auto; aspect-ratio: 4 / 3; }
   .foot__top { grid-template-columns: 1fr; justify-items: start; }
   .foot__cols { grid-template-columns: 1fr 1fr; }
@@ -460,12 +462,12 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
    Apple's fluid-interface rules, applied site-wide
    ===================================================================================== */
 /* response: feedback on the press itself, at once, never on release */
-.btn, .action, .picks button, .amen button, .seg button, .pcard, .wall__item, .others__list a, .hero__pause, .nav__toggle, .lightbox__bar button, .rows--hover > li {
+.btn, .action, .picks button, .seg button, .pcard, .wall__item, .others__list a, .hero__pause, .nav__toggle, .lightbox__bar button, .rows--hover > li {
   -webkit-tap-highlight-color: transparent;
 }
 .btn:active { scale: .97; transition: scale .1s ease-out; }
 .btn { transition: color .3s, border-color .3s, box-shadow .3s, scale .25s var(--ease); }
-.action:active, .picks button:active, .amen button:active, .others__list a:active { opacity: .6; transition: opacity .06s; }
+.action:active, .picks button:active, .others__list a:active { opacity: .6; transition: opacity .06s; }
 .pcard:active .pcard__pic, .wall__item:active { scale: .985; transition: scale .1s ease-out; }
 .pcard__pic, .wall__item { transition: scale .35s var(--ease); }
 .seg button:active span { opacity: .6; }

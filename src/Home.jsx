@@ -211,32 +211,28 @@ function Stages() {
 
 /* ---------- amenities: a list that swaps the picture beside it ---------- */
 function Amenities() {
-  const [a, setA] = useState(0);
+  // four round photos roll in from the right once, each turning upright as it lands; names stay level and readable
   return (
-    <section className="section" id="amenities" aria-labelledby="amenities-h">
+    <section className="section amenities" id="amenities" aria-labelledby="amenities-h">
       <div className="wrap has-spot"><Spot shape="sun" />
         <Head id="amenities-h" text="Pools, clubhouse and play areas" lead="Shared spaces on the ground and the terrace, kept by our own maintenance team for the first two years." />
-        <div className="split">
-          <ul className="amen">
-            {AMENITIES.map((m, i) => (
-              <Rise as="li" key={m[0]} delay={0.06 * i}>
-                <button type="button" aria-pressed={a === i} onMouseEnter={() => setA(i)} onFocus={() => setA(i)} onClick={() => setA(i)}>
-                  <span className="amen__name">{m[0]}</span>
-                  <motion.span className="amen__text" initial={false} animate={{ height: a === i ? 'auto' : 0, opacity: a === i ? 1 : 0 }} transition={SPRING}>
-                    <span>{m[1]}</span>
-                  </motion.span>
-                </button>
-              </Rise>
-            ))}
-          </ul>
-          <Rise className="amen__pics">
-            <AnimatePresence initial={false}>
-              <motion.img key={a} src={`${BASE}/media/img/${AMENITIES[a][2]}`} alt={AMENITIES[a][3]}
-                initial={{ clipPath: 'inset(0% 0% 100% 0%)', scale: 1.12 }} animate={{ clipPath: 'inset(0% 0% 0% 0%)', scale: 1 }} exit={{ opacity: 0.6 }}
-                transition={{ duration: 0.9, ease: EASE }} />
-            </AnimatePresence>
-          </Rise>
-        </div>
+        <motion.ul className="roll" initial="away" whileInView="here" viewport={{ once: true, margin: '0px 0px -20% 0px' }}>
+          {AMENITIES.map((m, i) => (
+            <li key={m[0]} className="roll__item">
+              <motion.div className="roll__disc"
+                variants={{ away: { x: '70vw', rotate: 220 }, here: { x: 0, rotate: 0 } }}
+                transition={{ duration: 1.5 + 0.1 * i, delay: 0.12 * i, ease: [0.16, 0.8, 0.24, 1] }}>
+                <img src={`${BASE}/media/img/${m[2]}`} alt={m[3]} loading="lazy" draggable={false} />
+              </motion.div>
+              <motion.div className="roll__text"
+                variants={{ away: { opacity: 0, y: 16 }, here: { opacity: 1, y: 0 } }}
+                transition={{ duration: 0.6, delay: 1.1 + 0.14 * i, ease: EASE }}>
+                <h3>{m[0]}</h3>
+                <p>{m[1]}</p>
+              </motion.div>
+            </li>
+          ))}
+        </motion.ul>
       </div>
     </section>
   );
