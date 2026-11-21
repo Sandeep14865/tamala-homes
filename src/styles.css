@@ -237,6 +237,10 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
   --fill: 1; background: rgb(224 165 38 / var(--fill)); border: 0 solid var(--turmeric); will-change: transform; }
 .orb i { position: absolute; left: 50%; top: 50%; width: 30%; height: 30%; translate: -50% -50%; border-radius: 50%;
   background: color-mix(in srgb, var(--cream) calc(var(--fill) * 100%), var(--turmeric)); }
+.orb__names { position: absolute; left: 0; top: 0; overflow: visible; }
+.orb__names text { font-family: var(--text); font-weight: 650; letter-spacing: 0; }
+/* the names are for desktop only: on a phone the shape is too small to carry words */
+@media (max-width: 899px) { .orb__names { display: none; } }
 .has-spot { position: relative; }
 .orb-spot { position: absolute; right: calc(var(--gut) + 64px); top: 48px; width: 0; height: 0; pointer-events: none; }
 /* the promise runs the full width, so its ring sits higher, in the space above the words */
