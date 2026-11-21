@@ -5,6 +5,7 @@
 // On desktop the resting shape also carries the section's name, set round a circle just inside its edge;
 // on a phone, where the shape is too small for that, one word slides out beside it instead.
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useReducedMotion } from 'framer-motion';
 
 // [corner radii in % x4, rotation deg, fill 0..1, ring width as a share of size, inner dot 0..1, size px on desktop]
@@ -58,21 +59,30 @@ export function Orb() {
     const texts = [...svg.querySelectorAll('text')];
     fit(svg); document.fonts?.ready.then(() => fit(svg));
     let raf = 0;
+    // The shape sits on the page, not on the screen: where it rests, it is at the spot's place in the document and
+    // scrolls with the content natively, so a phone's momentum scroll can't leave it lagging and jumping behind.
+    // A phone's toolbar grows and shrinks the window while you scroll; only a width change counts as a real resize.
+    const touch = matchMedia('(pointer: coarse)').matches;
+    let W = innerWidth, VH = innerHeight;
     const frame = () => {
       raf = 0;
       const spots = [...document.querySelectorAll('.orb-spot')];
       if (!spots.length) { orb.style.opacity = 0; return; }
-      const vh = innerHeight, mid = vh / 2, small = innerWidth < 900 ? 0.5 : 1;
-      const at = spots.map(s => { const r = s.getBoundingClientRect(); return { x: r.left, y: r.top, k: s.dataset.orb, s: SHAPES[s.dataset.orb] || SHAPES.sun }; });
+      if (!touch || innerWidth !== W) { W = innerWidth; VH = innerHeight; }
+      const vh = VH, mid = vh / 2, small = innerWidth < 900 ? 0.5 : 1;
+      const at = spots.map(s => { const r = s.getBoundingClientRect(); return { x: r.left + scrollX, y: r.top, Y: r.top + scrollY, k: s.dataset.orb, s: SHAPES[s.dataset.orb] || SHAPES.sun }; });
       // the spot just above the middle of the screen and the one just below it
       let i = at.findIndex(a => a.y > mid) - 1;
       let a, b, t;
       if (i === -2) { a = b = at[at.length - 1]; t = 0; }            // every spot has passed: rest on the last
       else if (i === -1) { a = b = at[0]; t = 0; }                   // none reached yet: wait on the first
       else { a = at[i]; b = at[i + 1]; t = clamp01((mid - a.y) / (b.y - a.y)); }
+      // on a phone the sections are short, so the shape would always be on the move: there it holds still on each spot
+      // (riding along with the page) for the first third of the way and the last quarter, and travels only in between
+      if (small < 1) t = clamp01((t - 0.32) / 0.43);
       const e = ease(t), dip = 1 - 0.68 * Math.sin(Math.PI * t);   // a dot in transit, full size at rest
       const size = lerp(a.s.size, b.s.size, e) * small * dip;
-      const x = lerp(a.x, b.x, e), y = lerp(a.y, b.y, e);
+      const x = lerp(a.x, b.x, e), y = lerp(a.Y, b.Y, e);   // page coordinates
       // fade in as the first spot rises into view; nothing over the hero film
       const show = clamp01((vh * 1.05 - at[0].y) / (vh * 0.35));
       const r = a.s.r.map((v, k) => lerp(v, b.s.r[k], e));
@@ -104,7 +114,7 @@ export function Orb() {
     return () => { removeEventListener('scroll', ask); removeEventListener('resize', ask); ro.disconnect(); cancelAnimationFrame(raf); };
   }, [still]);
   if (still) return null;
-  return (
+  return createPortal(
     <>
     <span className="orb-tag" ref={tag} aria-hidden="true"><b /></span>
     <div className="orb" ref={el} aria-hidden="true">
@@ -118,6 +128,7 @@ export function Orb() {
         ))}
       </svg>
     </div>
-    </>
+    </>,
+    document.body
   );
 }
