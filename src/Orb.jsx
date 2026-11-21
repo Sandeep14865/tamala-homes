@@ -17,7 +17,7 @@ const SHAPES = {
 // the name each shape carries, the circle it runs on (radius in a 100-unit box) and its colour
 const LABELS = {
   pin:    { text: 'Where we build', r: 36, ink: 'var(--ink)' },
-  ring:   { text: 'Our promise',    r: 24, ink: 'var(--turmeric)' },
+  ring:   { text: 'Our promise',    r: 38, ink: 'var(--ink)' },        // on the band itself: the hole shows the dark section
   brick:  { text: 'How we build',   r: 36, ink: 'var(--ink)' },
   sun:    { text: 'Amenities',      r: 36, ink: 'var(--ink)' },
   target: { text: 'Visit us',       r: 27, ink: 'var(--ink)' },
