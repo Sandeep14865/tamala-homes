@@ -232,6 +232,25 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
 .mapcard__note b { color: var(--ink); font-weight: 600; }
 .mapcard__note .link { font-size: inherit; }
 
+/* ---------- the travelling shape (home page) ---------- */
+.orb { position: fixed; left: 0; top: 0; z-index: 50; pointer-events: none; box-sizing: border-box; opacity: 0;
+  --fill: 1; background: rgb(224 165 38 / var(--fill)); border: 0 solid var(--turmeric); will-change: transform; }
+.orb i { position: absolute; left: 50%; top: 50%; width: 30%; height: 30%; translate: -50% -50%; border-radius: 50%;
+  background: color-mix(in srgb, var(--cream) calc(var(--fill) * 100%), var(--turmeric)); }
+.has-spot { position: relative; }
+.orb-spot { position: absolute; right: calc(var(--gut) + 64px); top: 48px; width: 0; height: 0; pointer-events: none; }
+/* the promise runs the full width, so its ring sits higher, in the space above the words */
+.orb-spot[data-orb="ring"] { top: -60px; }
+@media (max-width: 899px) { .orb-spot, .orb-spot[data-orb="ring"] { right: calc(var(--gut) + 30px); top: -44px; } }
+/* without motion the shapes simply sit at their spots */
+@media (prefers-reduced-motion: reduce) {
+  .orb-spot::before { content: ""; position: absolute; width: 96px; height: 96px; translate: -50% -50%; box-sizing: border-box; border-radius: 50%; background: var(--turmeric); }
+  .orb-spot[data-orb="pin"]::before { border-radius: 50% 50% 50% 0; rotate: -45deg; }
+  .orb-spot[data-orb="ring"]::before, .orb-spot[data-orb="target"]::before { background: none; border: 15px solid var(--turmeric); }
+  .orb-spot[data-orb="brick"]::before { border-radius: 14%; rotate: 12deg; }
+  @media (max-width: 899px) { .orb-spot::before { scale: .55; } }
+}
+
 /* ---------- 3D stages ---------- */
 .viz { position: relative; overflow: hidden; border-radius: var(--r-lg); background: var(--dark); height: clamp(420px, 72vh, 700px); }
 .split--viz > .viz { position: sticky; top: 12vh; }

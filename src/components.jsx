@@ -1,6 +1,7 @@
 // Shared pieces of the site: intro, cursor, nav, hero, 3D frame, visit form, footer.
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, useMotionValueEvent, useReducedMotion, animate } from 'framer-motion';
+import { Spot } from './Orb.jsx';
 import { Link, BASE, Words, Rise, Picture, Magnetic, Arrow, EASE, SPRING, tick, useReady, useMedia } from './lib.jsx';
 import { CONTACT } from './data.js';
 import { PAGES, ORDER, HOURS } from './content.js';
@@ -221,7 +222,7 @@ export function Head({ id, parts, text, lead }) {
 }
 
 /* ---------- the visit form: it opens the visitor's email app with the request filled in ---------- */
-export function Visit({ project, heading, lead, photo }) {
+export function Visit({ project, heading, lead, photo, spot }) {
   const [v, setV] = useState({ name: '', phone: '', project: project || 'Arundelpet', date: '' });
   const [err, setErr] = useState({}); const [sent, setSent] = useState(false);
   const set = k => e => { setV(s => ({ ...s, [k]: e.target.value })); setErr(s => ({ ...s, [k]: undefined })); };
@@ -250,7 +251,7 @@ export function Visit({ project, heading, lead, photo }) {
   const brochure = project ? Object.values(PAGES).find(p => p.short === project).key : 'tamala-homes';
   return (
     <section className="section section--surface" id="visit" aria-labelledby="visit-h">
-      <div className="wrap">
+      <div className={spot ? 'wrap has-spot' : 'wrap'}>{spot && <Spot shape={spot} />}
         <Head id="visit-h" text={heading} lead={lead} />
         <div className="split">
           <Rise as="form" className="form" onSubmit={submit} noValidate>

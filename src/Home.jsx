@@ -6,6 +6,7 @@ import { Link, BASE, Words, Rise, Picture, Counter, Arrow, EASE, SPRING, useMedi
 import { Nav, Hero, Head, Visit, Footer, gmaps } from './components.jsx';
 import { PROJECTS, MAP } from './data.js';
 import { PAGES, ORDER, STAGES, AMENITIES } from './content.js';
+import { Orb, Spot } from './Orb.jsx';
 
 const LINKS = [['Projects', '#projects'], ['Locations', '#map'], ['Building', '#build'], ['Amenities', '#amenities']];
 const TOWERS = Object.values(PROJECTS).reduce((a, p) => a + p.towers.length, 0);
@@ -74,7 +75,7 @@ function MapSection() {
   const route = i => setTo(t => (t === i ? -1 : i));
   return (
     <section className="section section--surface" id="map" aria-labelledby="map-h">
-      <div className="wrap">
+      <div className="wrap has-spot"><Spot shape="pin" />
         <Head id="map-h" text="Where we build in Guntur" lead="Choose a project, then a place you drive to every week to see the way there." />
         <div className="split split--viz split--map">
           <div className="panel">
@@ -145,7 +146,7 @@ function Promise_() {
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.82', 'start 0.18'] });
   return (
     <section className="section section--dark promise" id="promise" aria-label="Our promise">
-      <div className="wrap">
+      <div className="wrap has-spot"><Spot shape="ring" />
         <Rise as="p" className="label">How we hand over</Rise>
         <p className="promise__text" ref={ref} aria-label={PROMISE.join(' ')}>
           {PROMISE.map((w, i) => {
@@ -182,7 +183,7 @@ function Stages() {
   const on = useCallback(i => setActive(i), []);
   return (
     <section className="section section--surface" id="build" aria-labelledby="build-h">
-      <div className="wrap">
+      <div className="wrap has-spot"><Spot shape="brick" />
         <Head id="build-h" text="Four stages from booking to keys" />
         <div className="stages">
           <div className="stages__sticky">
@@ -213,7 +214,7 @@ function Amenities() {
   const [a, setA] = useState(0);
   return (
     <section className="section" id="amenities" aria-labelledby="amenities-h">
-      <div className="wrap">
+      <div className="wrap has-spot"><Spot shape="sun" />
         <Head id="amenities-h" text="Pools, clubhouse and play areas" lead="Shared spaces on the ground and the terrace, kept by our own maintenance team for the first two years." />
         <div className="split">
           <ul className="amen">
@@ -246,6 +247,7 @@ export default function Home() {
   return (
     <>
       <Nav links={LINKS} />
+      <Orb />
       <main id="main">
         <Hero film word="Tamala Homes" title="2 and 3 BHK apartments in Guntur" />
         <Projects />
@@ -253,7 +255,7 @@ export default function Home() {
         <Promise_ />
         <Stages />
         <Amenities />
-        <Visit heading="Site visits, seven days a week" lead="Tell us the project and a day. We call to confirm a time and send a car from the office in Brodipet."
+        <Visit spot="target" heading="Site visits, seven days a week" lead="Tell us the project and a day. We call to confirm a time and send a car from the office in Brodipet."
           photo={['city-view.webp', 'A bright flat with a breakfast counter and a window onto apartment towers']} />
       </main>
       <Footer />
