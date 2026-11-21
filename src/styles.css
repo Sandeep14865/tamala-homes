@@ -241,6 +241,11 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
 .orb__names text { font-family: var(--text); font-weight: 650; letter-spacing: 0; }
 /* the names are for desktop only: on a phone the shape is too small to carry words */
 @media (max-width: 899px) { .orb__names { display: none; } }
+/* the phone label: a small cream tag that slides out from behind the shape */
+.orb-tag { display: none; position: fixed; left: 0; top: 0; z-index: 49; pointer-events: none; overflow: hidden; opacity: 0; border-radius: 999px; }
+.orb-tag b { display: block; padding: 6px 11px 5px; border-radius: 999px; background: var(--cream); color: var(--ink);
+  box-shadow: inset 0 0 0 1px rgb(15 35 29 / .12); font: 650 12px/1 var(--text); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+@media (max-width: 899px) { .orb-tag { display: block; } }
 .has-spot { position: relative; }
 .orb-spot { position: absolute; right: calc(var(--gut) + 64px); top: 48px; width: 0; height: 0; pointer-events: none; }
 /* the promise runs the full width, so its ring sits higher, in the space above the words */

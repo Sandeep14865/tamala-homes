@@ -2,7 +2,8 @@
 // with <Spot shape="…" />; the shape rests on a spot when that spot crosses the middle of the screen, and glides
 // (shrinking to a dot) to the next one in between. It changes form at every stop: a map pin where we build,
 // a key ring for the handover promise, a brick for the build stages, a sun for amenities, a target for the visit.
-// On desktop the resting shape also carries the section's name, set round a circle just inside its edge.
+// On desktop the resting shape also carries the section's name, set round a circle just inside its edge;
+// on a phone, where the shape is too small for that, one word slides out beside it instead.
 import { useEffect, useRef } from 'react';
 import { useReducedMotion } from 'framer-motion';
 
@@ -22,6 +23,8 @@ const LABELS = {
   sun:    { text: 'Amenities',      r: 36, ink: 'var(--ink)' },
   target: { text: 'Visit us',       r: 27, ink: 'var(--ink)' },
 };
+// the one word that slides out beside the shape on a phone
+const WORDS = { pin: 'Map', ring: 'Promise', brick: 'Build', sun: 'Amenities', target: 'Visit' };
 const FS = 8.5;   // font size in box units: about 10px at rest on desktop
 // a full circle from the top, clockwise, so the letters stand on it facing out
 const circle = r => `M50,${50 - r} a${r},${r} 0 1,1 0,${2 * r} a${r},${r} 0 1,1 0,${-2 * r}`;
@@ -48,10 +51,10 @@ export function Spot({ shape }) {
 
 export function Orb() {
   const still = useReducedMotion();
-  const el = useRef(null), dot = useRef(null), names = useRef(null);
+  const el = useRef(null), dot = useRef(null), names = useRef(null), tag = useRef(null);
   useEffect(() => {
     if (still) return;
-    const orb = el.current, inner = dot.current, svg = names.current;
+    const orb = el.current, inner = dot.current, svg = names.current, label = tag.current, word = label.firstChild;
     const texts = [...svg.querySelectorAll('text')];
     fit(svg); document.fonts?.ready.then(() => fit(svg));
     let raf = 0;
@@ -86,6 +89,13 @@ export function Orb() {
       svg.style.left = svg.style.top = `${-ring}px`; svg.style.width = svg.style.height = `${size}px`;
       svg.style.transform = `rotate(${scrollY * 0.04}deg)`;
       texts.forEach(n => { const k = n.dataset.k; n.style.opacity = rest * ((k === a.k ? 1 - e : 0) + (k === b.k ? e : 0)); });
+      // the phone label: it slides out from behind the shape's left side while the shape rests, and back in as it leaves;
+      // the word only changes while it is tucked away
+      const near = e < 0.5 ? a.k : b.k;
+      if (word.textContent !== WORDS[near] && (rest < 0.05 || !word.textContent)) word.textContent = WORDS[near] || '';
+      label.style.opacity = show * Math.min(1, rest * 1.6);
+      label.style.transform = `translate3d(${x - size / 2 - 6}px, ${y}px, 0) translate(-100%, -50%)`;
+      word.style.transform = `translateX(${(1 - rest) * 105}%)`;
     };
     const ask = () => { if (!raf) raf = requestAnimationFrame(frame); };
     addEventListener('scroll', ask, { passive: true }); addEventListener('resize', ask);
@@ -95,6 +105,8 @@ export function Orb() {
   }, [still]);
   if (still) return null;
   return (
+    <>
+    <span className="orb-tag" ref={tag} aria-hidden="true"><b /></span>
     <div className="orb" ref={el} aria-hidden="true">
       <i ref={dot} />
       <svg className="orb__names" ref={names} viewBox="0 0 100 100">
@@ -106,5 +118,6 @@ export function Orb() {
         ))}
       </svg>
     </div>
+    </>
   );
 }
