@@ -45,7 +45,7 @@ function fit(svg) {
   });
 }
 const lerp = (a, b, t) => a + (b - a) * t;
-const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const ease = t => (1 - Math.cos(Math.PI * t)) / 2;   // a soft sine in-out: no sudden rush in the middle
 const clamp01 = v => Math.min(1, Math.max(0, v));
 
 export function Spot({ shape }) {
@@ -66,7 +66,10 @@ export function Orb() {
     // A phone's toolbar grows and shrinks the window while you scroll; only a width change counts as a real resize.
     const touch = matchMedia('(pointer: coarse)').matches;
     let W = innerWidth, VH = innerHeight;
-    const frame = () => {
+    // the shape doesn't snap to the scroll: it follows its target with a short, even easing (about a fifth of a second),
+    // so a jerky wheel or a fast flick still reads as one smooth glide
+    let P = null, then = 0;
+    const frame = now => {
       raf = 0;
       const spots = [...document.querySelectorAll('.orb-spot')];
       if (!spots.length) { orb.style.opacity = 0; return; }
@@ -75,14 +78,21 @@ export function Orb() {
       const at = spots.map(s => { const r = s.getBoundingClientRect(); return { x: r.left + scrollX, y: r.top, Y: r.top + scrollY, k: s.dataset.orb, s: SHAPES[s.dataset.orb] || SHAPES.sun }; });
       // the spot just above the middle of the screen and the one just below it
       let i = at.findIndex(a => a.y > mid) - 1;
-      let a, b, t;
-      if (i === -2) { a = b = at[at.length - 1]; t = 0; }            // every spot has passed: rest on the last
-      else if (i === -1) { a = b = at[0]; t = 0; }                   // none reached yet: wait on the first
-      else { a = at[i]; b = at[i + 1]; t = clamp01((mid - a.y) / (b.y - a.y)); }
-      // the shape holds still, full size, on each spot (riding along with the page) for the first third of the way and
-      // the last quarter, so its name can be read; it travels only in between
-      t = clamp01((t - 0.32) / 0.43);
-      const e = ease(t), dip = 1 - 0.68 * Math.sin(Math.PI * t);   // a dot in transit, full size at rest
+      // where the shape should be, as a running position along the spots (2.5 = halfway from the third to the fourth)
+      let goal;
+      if (i === -2) goal = at.length - 1;                            // every spot has passed: rest on the last
+      else if (i === -1) goal = 0;                                   // none reached yet: wait on the first
+      else {
+        // it holds still, full size, on each spot (riding along with the page) for the first fifth of the way and the
+        // last fifth, so its name can be read; it glides through the three fifths in between
+        const raw = clamp01((mid - at[i].y) / (at[i + 1].y - at[i].y));
+        goal = i + clamp01((raw - 0.2) / 0.6);
+      }
+      const dt = then ? Math.min(0.1, (now - then) / 1000) : 1 / 60; then = now;
+      P = P === null ? goal : P + (goal - P) * (1 - Math.exp(-dt / 0.09));
+      if (Math.abs(goal - P) < 0.0005) { P = goal; then = 0; } else raf = requestAnimationFrame(frame);
+      const ia = Math.min(Math.floor(P), at.length - 1), a = at[ia], b = at[Math.min(ia + 1, at.length - 1)], t = P - ia;
+      const e = ease(t), dip = 1 - 0.6 * Math.sin(Math.PI * t);   // a dot in transit, full size at rest
       const size = lerp(a.s.size, b.s.size, e) * small * dip;
       const x = lerp(a.x, b.x, e), y = lerp(a.Y, b.Y, e);   // page coordinates
       // fade in as the first spot rises into view; nothing over the hero film
