@@ -8,13 +8,15 @@ import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useReducedMotion } from 'framer-motion';
 
+// one resting size for every shape, so the names round their edges all read at the same size (about 12px on desktop)
+const SIZE = 136;
 // [corner radii in % x4, rotation deg, fill 0..1, ring width as a share of size, inner dot 0..1, size px on desktop]
 const SHAPES = {
-  pin:    { r: [50, 50, 50, 0],  rot: -45, fill: 1, ring: 0,    dot: 1, size: 112 },
-  ring:   { r: [50, 50, 50, 50], rot: 0,   fill: 0, ring: 0.17, dot: 0, size: 150 },
-  brick:  { r: [14, 14, 14, 14], rot: 12,  fill: 1, ring: 0,    dot: 0, size: 118 },
-  sun:    { r: [50, 50, 50, 50], rot: 90,  fill: 1, ring: 0,    dot: 0, size: 104 },
-  target: { r: [50, 50, 50, 50], rot: 180, fill: 0, ring: 0.13, dot: 1, size: 126 },
+  pin:    { r: [50, 50, 50, 0],  rot: -45, fill: 1, ring: 0,    dot: 1, size: SIZE },
+  ring:   { r: [50, 50, 50, 50], rot: 0,   fill: 0, ring: 0.17, dot: 0, size: SIZE },
+  brick:  { r: [14, 14, 14, 14], rot: 12,  fill: 1, ring: 0,    dot: 0, size: SIZE },
+  sun:    { r: [50, 50, 50, 50], rot: 90,  fill: 1, ring: 0,    dot: 0, size: SIZE },
+  target: { r: [50, 50, 50, 50], rot: 180, fill: 0, ring: 0.13, dot: 1, size: SIZE },
 };
 // the name each shape carries, the circle it runs on (radius in a 100-unit box) and its colour
 const LABELS = {
@@ -26,7 +28,7 @@ const LABELS = {
 };
 // the one word that slides out beside the shape on a phone
 const WORDS = { pin: 'Map', ring: 'Promise', brick: 'Build', sun: 'Amenities', target: 'Visit' };
-const FS = 8.5;   // font size in box units: about 10px at rest on desktop
+const FS = 9;   // font size in box units: about 12px at rest on desktop
 // a full circle from the top, clockwise, so the letters stand on it facing out
 const circle = r => `M50,${50 - r} a${r},${r} 0 1,1 0,${2 * r} a${r},${r} 0 1,1 0,${-2 * r}`;
 const unitOf = text => `${text.toUpperCase()}\u00a0\u00a0·\u00a0\u00a0`;   // fixed spaces: SVG would fold plain ones
