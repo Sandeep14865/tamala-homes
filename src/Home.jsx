@@ -177,10 +177,11 @@ function Stage({ i, s, active, onActive }) {
   );
 }
 function Stages() {
-  const [active, setActive] = useState(0);
+  const [{ active, prev }, setStage] = useState({ active: 0, prev: 0 });   // the stage on show and the one it replaced
   const ref = useRef(null);
+  const down = active >= prev;
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.5', 'end 0.5'] });
-  const on = useCallback(i => setActive(i), []);
+  const on = useCallback(i => setStage(x => (x.active === i ? x : { active: i, prev: x.active })), []);
   return (
     <section className="section section--surface" id="build" aria-labelledby="build-h">
       <div className="wrap has-spot"><Spot shape="brick" />
@@ -193,10 +194,18 @@ function Stages() {
               </AnimatePresence></span><i>/ 04</i>
             </div>
             <div className="stages__pics">
-              {STAGES.map((s, i) => (
-                <motion.img key={s[2]} src={`${BASE}/media/img/${s[2]}`} alt={i === active ? s[3] : ''} loading="lazy"
-                  animate={{ opacity: i === active ? 1 : 0, scale: i === active ? 1 : 1.1 }} transition={{ duration: 0.9, ease: EASE }} />
-              ))}
+              {/* never a blend: the new picture wipes in over the one before it (from below going down, from above going up);
+                  only those two are ever on screen, however fast the scroll */}
+              {STAGES.map((s, i) => {
+                const on = i === active, under = i === prev && !on;
+                return (
+                  <motion.img key={s[2]} src={`${BASE}/media/img/${s[2]}`} alt={on ? s[3] : ''} loading="lazy"
+                    style={{ zIndex: on ? 2 : under ? 1 : 0, visibility: on || under ? 'visible' : 'hidden' }}
+                    initial={false}
+                    animate={on ? { clipPath: 'inset(0% 0% 0% 0%)', scale: 1 } : { clipPath: down ? 'inset(100% 0% 0% 0%)' : 'inset(0% 0% 100% 0%)', scale: 1.08 }}
+                    transition={on ? { duration: 0.85, ease: EASE } : { duration: 0 , delay: 0.85 }} />
+                );
+              })}
             </div>
           </div>
           <div className="stages__steps" ref={ref}>

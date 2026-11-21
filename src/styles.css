@@ -285,6 +285,7 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
 .stages { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: clamp(32px, 6vw, 110px); align-items: start; }
 .stages__sticky { position: sticky; top: 14vh; display: grid; gap: 20px; }
 .stages__count { display: flex; align-items: baseline; gap: 12px; font: 600 clamp(64px, 7vw, 120px)/.85 var(--display); font-stretch: 76%; letter-spacing: -0.03em; }
+.stages__count .w { position: relative; }   /* keeps the leaving number inside the mask */
 .stages__count i { font: 400 18px/1 var(--text); font-style: normal; color: var(--muted); letter-spacing: 0; }
 .stages__pics { position: relative; height: min(56vh, 560px); border-radius: var(--r-lg); overflow: hidden; background: var(--dark); }
 .stages__pics img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
