@@ -70,7 +70,7 @@ function MapSection() {
   const dest = to >= 0 ? MAP.landmarks[to] : null;
   const src = dest
     ? `https://www.google.com/maps?saddr=${enc(from)}&daddr=${enc(inGuntur(dest.name))}&output=embed`
-    : `https://www.google.com/maps?q=${enc(from)}&z=14&output=embed`;
+    : `https://www.google.com/maps?q=${p.ll}&z=15&output=embed`;
   const pick = k => { setSel(k); setTo(-1); };
   const route = i => setTo(t => (t === i ? -1 : i));
   return (

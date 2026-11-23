@@ -5,7 +5,9 @@ export const ORDER = ['arundelpet', 'amaravati-road', 'gorantla'];
 
 export const PAGES = {
   arundelpet: {
-    key: 'arundelpet', name: 'Tamala Arundelpet', short: 'Arundelpet', place: 'Arundelpet', inPlace: 'in Arundelpet',
+    // ll: where the map drops its pin. A pin on coordinates shows a plain card; a place-name search showed Google's
+    // place card with "No reviews", which reads badly for a builder
+    key: 'arundelpet', name: 'Tamala Arundelpet', short: 'Arundelpet', place: 'Arundelpet', ll: '16.2989,80.4439', inPlace: 'in Arundelpet',
     status: 'Ready to move', title: '2 and 3 BHK flats in Arundelpet, Guntur',
     card: 'One tower of 32 flats near the railway station.',
     cardImg: 'arundelpet-exterior.webp', cardAlt: 'White apartment tower among palm trees', cardPos: '50% 30%',
@@ -19,7 +21,7 @@ export const PAGES = {
       ['bedroom-island.webp', 'A bedroom beside a kitchen island'], ['openplan-wood.webp', 'An open plan flat with a wooden slatted wall'], ['city-view.webp', 'A breakfast counter by a window onto apartment towers']],
   },
   'amaravati-road': {
-    key: 'amaravati-road', name: 'Tamala Amaravati Road', short: 'Amaravati Road', place: 'Amaravati Road', inPlace: 'on Amaravati Road',
+    key: 'amaravati-road', name: 'Tamala Amaravati Road', short: 'Amaravati Road', place: 'Amaravati Road', ll: '16.3204,80.4390', inPlace: 'on Amaravati Road',
     status: 'Under construction', title: '2 and 3 BHK flats on Amaravati Road, Guntur',
     card: 'Two towers of 96 flats, handover December 2027.',
     cardImg: 'amaravati-exterior.webp', cardAlt: 'Two apartment towers in slate and orange under a cloudy sky', cardPos: '50% 50%',
@@ -35,7 +37,7 @@ export const PAGES = {
     progressImg: ['build-crew.webp', 'Workers in hard hats and safety vests inside a building under construction'],
   },
   gorantla: {
-    key: 'gorantla', name: 'Tamala Gorantla', short: 'Gorantla', place: 'Gorantla', inPlace: 'in Gorantla',
+    key: 'gorantla', name: 'Tamala Gorantla', short: 'Gorantla', place: 'Gorantla', ll: '16.3389,80.4268', inPlace: 'in Gorantla',
     status: 'Launching soon', title: '2 and 3 BHK flats in Gorantla, Guntur',
     card: 'Three towers of 168 flats off the Inner Ring Road.',
     cardImg: 'gorantla-exterior.webp', cardAlt: 'Apartment towers lit by the evening sun', cardPos: '50% 50%',

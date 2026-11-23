@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup, useMotionValue, useTransform } from 'framer-motion';
 import { Link, BASE, Words, Rise, Picture, Counter, Arrow, EASE, SPRING, FLICK, project, tick } from './lib.jsx';
-import { Nav, Hero, Viz, Head, Visit, Footer, gmaps } from './components.jsx';
+import { Nav, Hero, Viz, Head, Visit, Footer, gmaps, wa } from './components.jsx';
 import { PROJECTS, PLANS, MAP, STATUS, flatsFor } from './data.js';
 import { PAGES, ORDER } from './content.js';
 
@@ -74,6 +74,15 @@ function Availability({ page }) {
                     <div><dt>Facing</dt><dd>{f.facing}</dd></div>
                     <div><dt>Status</dt><dd><i className="dot" style={{ background: STATUS[f.status].color }} />{STATUS[f.status].label}</dd></div>
                   </dl>
+                  {/* the next step for the flat on show: ask about it by name, with the details already in the message */}
+                  {f.status !== 'sold' && (() => {
+                    const name = `Flat ${f.floor}${f.unit}${proj.towers.length > 1 ? `, Tower ${f.tower}` : ''}`;
+                    return (
+                      <a className="btn btn--solid flat__ask" target="_blank" rel="noopener"
+                        href={wa(`Hello Tamala Homes, I'm interested in ${name} at Tamala ${page.short} (${f.bhk} BHK, ${f.area.toLocaleString('en-IN')} sq ft, ${f.facing} facing). Please share the price and a time to see it.`)}>
+                        Ask about {f.floor}{f.unit} on WhatsApp<Arrow /></a>
+                    );
+                  })()}
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -115,7 +124,19 @@ function Plans({ page }) {
               <Seg label="Flat type" value={bhk} onChange={setBhk} options={[[2, '2 BHK'], [3, '3 BHK']]} />
               <Seg label="View" value={mode} onChange={setMode} options={[['3d', '3D'], ['layout', 'Layout']]} />
             </div>
-            <ul className="rows rows--tight"><li><span>Super built-up area</span><span className="num">{plan.area.toLocaleString('en-IN')} sq ft</span></li></ul>
+            {/* the three areas a buyer compares: carpet (the rooms inside the walls, as RERA counts it), the balcony, and the
+                super built-up figure the flat is sold by. Carpet is worked out from the plan itself, so the numbers always add up */}
+            {(() => {
+              const sq = r => r.w * r.d, bal = plan.rooms.filter(r => r.id === 'balcony').reduce((s, r) => s + sq(r), 0);
+              const carpet = plan.rooms.reduce((s, r) => s + sq(r), 0) - bal;
+              return (
+                <ul className="rows rows--tight">
+                  <li><span>Carpet area</span><span className="num">{Math.round(carpet).toLocaleString('en-IN')} sq ft</span></li>
+                  <li><span>Balcony</span><span className="num">{Math.round(bal).toLocaleString('en-IN')} sq ft</span></li>
+                  <li><span>Super built-up area</span><span className="num">{plan.area.toLocaleString('en-IN')} sq ft</span></li>
+                </ul>
+              );
+            })()}
             <ul className="rows rows--tight rows--hover" aria-label="Rooms" onMouseLeave={() => setRoom(null)}>
               <AnimatePresence mode="popLayout" initial={false}>
                 {plan.rooms.map((r, i) => (
@@ -290,7 +311,7 @@ export default function Project({ page }) {
                 </p>
               </div>
               <Rise className="gmap fill">
-                <iframe title={`Google map of ${page.place}, Guntur`} src={`https://www.google.com/maps?q=${encodeURIComponent(place)}&z=14&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
+                <iframe title={`Google map of ${page.place}, Guntur`} src={`https://www.google.com/maps?q=${page.ll}&z=15&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
               </Rise>
             </div>
           </div>

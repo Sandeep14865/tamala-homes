@@ -237,8 +237,12 @@ export function Visit({ project, heading, lead, photo, spot }) {
     for (const k of ['name', 'phone', 'date']) { const m = check(k, v[k]); if (m) er[k] = m; }
     setErr(er);
     if (Object.keys(er).length) { const first = e.currentTarget.querySelector(`[name="${Object.keys(er)[0]}"]`); first && first.focus(); return; }
-    const body = `Name: ${v.name}\nPhone: ${v.phone}\nProject: ${v.project}\nDay of the visit: ${v.date}`;
-    window.location.href = `mailto:${CONTACT.email}?subject=${encodeURIComponent('Site visit request: ' + v.project)}&body=${encodeURIComponent(body)}`;
+    // the request goes out as a WhatsApp message, filled in and ready to send: that's how most families here reach us
+    // (an email app is often not set up on a phone); email stays as a link under the button
+    const day = new Date(v.date + 'T12:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
+    const msg = `Hello Tamala Homes, I would like to book a site visit.\nName: ${v.name}\nPhone: ${v.phone}\nProject: ${v.project}\nDay: ${day}`;
+    const w = window.open(wa(msg), '_blank', 'noopener');
+    if (!w) window.location.href = wa(msg);
     setSent(true); tick();
   };
   const field = (k, label, props) => (
@@ -266,7 +270,8 @@ export function Visit({ project, heading, lead, photo, spot }) {
             {field('date', 'Day of the visit', { type: 'date' })}
             <div className="form__foot">
               <Magnetic pull={0.18}><button className="btn btn--solid btn--lg" type="submit">Book a site visit<Arrow /></button></Magnetic>
-              <p className="form__note" role="status">{sent ? 'Your email app opens with the request filled in. Send it and we call you within a day.' : 'We call you within a day to fix the time.'}</p>
+              <p className="form__note" role="status">{sent ? 'WhatsApp opens with your request filled in. Send it and we call you within a day.' : 'Opens WhatsApp with your request filled in. We call you within a day to fix the time.'}</p>
+              <p className="form__note">Rather use email? <a className="link" href={`mailto:${CONTACT.email}?subject=${encodeURIComponent('Site visit request: ' + v.project)}&body=${encodeURIComponent(`Name: ${v.name}\nPhone: ${v.phone}\nProject: ${v.project}\nDay of the visit: ${v.date}`)}`}>Send it by email</a></p>
             </div>
           </Rise>
           <div className="visit__side">

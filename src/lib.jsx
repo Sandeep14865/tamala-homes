@@ -14,7 +14,12 @@ export const tick = () => { try { navigator.vibrate && navigator.vibrate(8); } c
 /* ---------- router ---------- */
 const subs = new Set();
 const notify = () => subs.forEach(f => f());
-window.addEventListener('popstate', notify);
+// Back and forward return to where you were on that page: each history entry remembers its scroll position,
+// and the page transition hands it back once the old page has left (see takeScroll in App.jsx)
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+let landY = 0;
+window.addEventListener('popstate', () => { landY = (history.state && history.state.y) || 0; notify(); });
+export const takeScroll = () => { const y = landY; landY = 0; return y; };
 // The site may live under a folder (GitHub Pages serves it at /tamala-homes/). App paths stay '/projects/x';
 // BASE is added on the way out to the address bar and to files, and taken off on the way in.
 export const BASE = import.meta.env.BASE_URL.replace(/\/+$/, '');
@@ -22,7 +27,14 @@ const strip = p => (BASE && p.startsWith(BASE) ? p.slice(BASE.length) : p).repla
 const clean = () => strip(location.pathname);
 const full = to => (to.startsWith('/') ? BASE + to : to);
 export function navigate(to) {
-  if (full(to) === location.pathname + location.hash) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+  const [p, h] = to.split('#');
+  // the same page without a section (the logo after a #map link, say): go to the top and drop the section from the address
+  if (!h && strip(full(p || '/')) === clean()) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (location.hash) history.replaceState(history.state, '', full(p || '/'));
+    return;
+  }
+  history.replaceState({ ...(history.state || {}), y: scrollY }, '');   // remember where we were, for Back
   history.pushState({}, '', full(to)); notify();
 }
 export function usePath() {

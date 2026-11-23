@@ -1,7 +1,7 @@
 // The app: intro, cursor, and the routed pages with a curtain between them.
 import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from 'framer-motion';
-import { usePath, Ready, EASE } from './lib.jsx';
+import { usePath, Ready, EASE, takeScroll } from './lib.jsx';
 import { Cursor, Preloader } from './components.jsx';
 import { PAGES } from './content.js';
 import Home from './Home.jsx';
@@ -37,6 +37,14 @@ function Page({ children }) {
   );
 }
 
+// after a page change: the top for a new page, or the remembered spot after Back or Forward. The new page may still be
+// growing (lazy sections), so try for a few frames until the spot can be reached
+function landAt() {
+  const y = takeScroll();
+  const go = (n = 0) => { window.scrollTo({ top: y, behavior: 'instant' }); if (Math.abs(scrollY - y) > 2 && n < 30) requestAnimationFrame(() => go(n + 1)); };
+  go();
+}
+
 export default function App() {
   const path = usePath();
   const reduce = useReducedMotion();
@@ -47,7 +55,7 @@ export default function App() {
       <Ready.Provider value={ready}>
         <Cursor />
         <AnimatePresence>{!ready && <Preloader key="intro" onDone={done} />}</AnimatePresence>
-        <AnimatePresence mode="wait" onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
+        <AnimatePresence mode="wait" onExitComplete={landAt}>
           <Page key={path}>{route(path)}</Page>
         </AnimatePresence>
       </Ready.Provider>
