@@ -2,7 +2,7 @@
 // the four build stages, amenities, the visit form.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useInView, useReducedMotion, LayoutGroup } from 'framer-motion';
-import { Link, BASE, Words, Rise, Picture, Counter, Arrow, EASE, SPRING, useMedia } from './lib.jsx';
+import { Link, BASE, Words, Rise, Picture, Counter, Arrow, Tilt, EASE, SPRING, useMedia } from './lib.jsx';
 import { Nav, Hero, Head, Visit, Footer, gmaps } from './components.jsx';
 import { PROJECTS, MAP } from './data.js';
 import { PAGES, ORDER, STAGES, AMENITIES } from './content.js';
@@ -43,13 +43,15 @@ function Projects() {
             const p = PAGES[k];
             return (
               <Link key={k} className="pcard" to={`/projects/${k}`} data-cursor="View">
-                <Picture className="pcard__pic" src={`${BASE}/media/img/${p.cardImg}`} alt={p.cardAlt} pos={p.cardPos} strength={pin ? 0 : 6} />
-                <div className="pcard__text">
-                  <Rise as="span" className="chip" delay={0.1}>{p.status}</Rise>
-                  <Words as="h3" text={p.short} delay={0.1} />
-                  <Rise as="p" delay={0.25}>{p.card}</Rise>
-                  <Rise as="span" className="pcard__go" delay={0.35}>View {p.short}<Arrow /></Rise>
-                </div>
+                <Tilt className="pcard__body">
+                  <Picture className="pcard__pic" src={`${BASE}/media/img/${p.cardImg}`} alt={p.cardAlt} pos={p.cardPos} strength={pin ? 0 : 6} />
+                  <div className="pcard__text">
+                    <Rise as="span" className="chip" delay={0.1}>{p.status}</Rise>
+                    <Words as="h3" text={p.short} delay={0.1} />
+                    <Rise as="p" delay={0.25}>{p.card}</Rise>
+                    <Rise as="span" className="pcard__go" delay={0.35}>View {p.short}<Arrow /></Rise>
+                  </div>
+                </Tilt>
               </Link>
             );
           })}

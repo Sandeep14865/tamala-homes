@@ -1,6 +1,6 @@
 // Small shared pieces: a history router, and the motion helpers every page uses.
 import { Fragment, useSyncExternalStore, useRef, useEffect, useState, createContext, useContext } from 'react';
-import { motion, useInView, useMotionValue, useSpring, useScroll, useTransform, useReducedMotion, animate } from 'framer-motion';
+import { motion, useInView, useMotionValue, useSpring, useScroll, useTransform, useReducedMotion, useMotionTemplate, animate } from 'framer-motion';
 
 export const EASE = [0.2, 0.7, 0.2, 1];
 // Apple's two springs: critically damped for ordinary state changes, a little bounce only after a flick or a drag
@@ -121,6 +121,39 @@ export function Magnetic({ children, pull = 0.28, className }) {
         x.set((e.clientX - (r.left + r.width / 2)) * pull); y.set((e.clientY - (r.top + r.height / 2)) * pull);
       }}
       onPointerLeave={() => { x.set(0); y.set(0); }}>{children}</motion.span>
+  );
+}
+
+/* ---------- a card that floats a layer above the page: it lifts and leans toward the mouse, with a soft glare ---------- */
+// The side under the pointer rises toward you, the shadow deepens and slides with the lean, and a glare follows the
+// pointer. Critically damped springs, so it settles without a wobble. Mouse only: on touch it rests raised and still.
+const LEAN = { stiffness: 210, damping: 29 };
+export function Tilt({ children, className = '', max = 5 }) {
+  const reduce = useReducedMotion();
+  const rx = useMotionValue(0), ry = useMotionValue(0), up = useMotionValue(0);
+  const gx = useMotionValue(50), gy = useMotionValue(20);
+  const sx = useSpring(rx, LEAN), sy = useSpring(ry, LEAN), lift = useSpring(up, LEAN);
+  const y = useTransform(lift, v => v * -8);
+  const shadow = useTransform([sy, lift], ([b, l]) => {
+    const ox = (-b * 1.6).toFixed(1), d = 1 + l * 0.7;
+    return `0 1px 1px rgb(15 35 29 / .05), ${ox * 0.4}px ${(6 * d).toFixed(1)}px ${(14 * d).toFixed(1)}px -4px rgb(15 35 29 / ${(0.08 + l * 0.04).toFixed(3)}), `
+      + `${ox}px ${(26 * d).toFixed(1)}px ${(56 * d).toFixed(1)}px -18px rgb(15 35 29 / ${(0.2 + l * 0.08).toFixed(3)})`;
+  });
+  const glare = useMotionTemplate`radial-gradient(circle at ${gx}% ${gy}%, rgb(255 255 255 / .28), rgb(255 255 255 / 0) 55%)`;
+  const move = e => {
+    if (e.pointerType !== 'mouse' || reduce) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+    rx.set((py - 0.5) * 2 * max); ry.set(-(px - 0.5) * 2 * max); up.set(1);
+    gx.set(px * 100); gy.set(py * 100);
+  };
+  const leave = () => { rx.set(0); ry.set(0); up.set(0); };
+  return (
+    <motion.div className={`tilt ${className}`} onPointerMove={move} onPointerLeave={leave}
+      style={reduce ? undefined : { rotateX: sx, rotateY: sy, y, boxShadow: shadow }}>
+      {children}
+      <motion.i className="tilt__glare" aria-hidden="true" style={{ backgroundImage: glare, opacity: lift }} />
+    </motion.div>
   );
 }
 

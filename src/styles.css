@@ -178,14 +178,26 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
 .projects.is-pinned { height: 340vh; }
 .projects.is-pinned .projects__sticky { position: sticky; top: 0; height: 100vh; overflow: hidden; display: flex; align-items: center; }
 .projects__track { display: flex; align-items: stretch; gap: clamp(24px, 3.2vw, 56px); padding-inline: var(--gut); }
-.projects.is-pinned .projects__track { width: max-content; }
+.projects.is-pinned .projects__track { width: max-content; padding-block: 48px; }   /* room for the cards' shadows */
 .projects__intro { display: flex; flex-direction: column; justify-content: space-between; gap: 40px; width: min(34vw, 520px); flex: none; padding-block: 8px; }
 .projects__intro h2 { font-size: clamp(38px, 4.2vw, 68px); }
 .stats { display: flex; gap: clamp(24px, 3vw, 48px); }
 .stats dd { font: 600 clamp(48px, 5vw, 84px)/.9 var(--display); font-stretch: 76%; letter-spacing: -0.03em; }
 .stats dt { margin-top: 8px; font-size: 0.9375rem; color: var(--muted); }
-.pcard { display: grid; grid-template-rows: auto auto; gap: 22px; width: min(54vw, 860px); flex: none; }
-.pcard__pic { aspect-ratio: auto; height: min(56vh, 560px); }
+.pcard { display: block; width: min(54vw, 860px); flex: none; perspective: 1600px; }
+/* the card is a raised sheet, a layer above the page: a paler surface than the limewash, a light top edge, and a
+   shadow in three depths (contact, near, far); the text sits a little nearer than the photo when it leans */
+.pcard__body {
+  position: relative; display: grid; grid-template-rows: auto auto; gap: 22px;
+  padding: clamp(10px, 1.1vw, 16px) clamp(10px, 1.1vw, 16px) clamp(20px, 2vw, 30px);
+  background: #fbfbf8; border-radius: 18px; transform-style: preserve-3d; will-change: transform;
+  box-shadow: 0 1px 1px rgb(15 35 29 / .05), 0 6px 14px -4px rgb(15 35 29 / .08), 0 26px 56px -18px rgb(15 35 29 / .2);
+}
+.pcard__body::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: inset 0 1px 0 rgb(255 255 255 / .9), inset 0 0 0 1px rgb(15 35 29 / .06); }
+.pcard__body .pcard__pic { border-radius: 10px; }
+.pcard__text { padding-inline: clamp(6px, .8vw, 12px); transform: translateZ(26px); }
+.tilt__glare { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; mix-blend-mode: soft-light; transform: translateZ(1px); }
+.pcard__pic { aspect-ratio: auto; height: min(54vh, 540px); }
 .pcard__pic > img { transition: scale 1.2s var(--ease); }
 .pcard:hover .pcard__pic > img { scale: 1.06; }
 .pcard__text { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 8px 24px; }
