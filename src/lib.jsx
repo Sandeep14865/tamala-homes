@@ -102,7 +102,7 @@ export function Picture({ src, alt, className = '', pos, strength = 8, reveal = 
   const y = useTransform(scrollYProgress, [0, 1], [`-${strength}%`, `${strength}%`]);
   return (
     <motion.div ref={ref} className={`pic ${className}`} {...rest}
-      initial={reveal ? { clipPath: 'inset(100% 0% 0% 0%)' } : false} whileInView={{ clipPath: 'inset(0% 0% 0% 0%)' }}
+      initial={reveal ? { clipPath: 'inset(100% 0% 0% 0%)' } : false} whileInView={{ clipPath: 'inset(0% 0% 0% 0%)', transitionEnd: { clipPath: 'none' } }}   // unmasked: drop the mask so a shadow can show
       viewport={{ once: true, margin: '0px 0px -8% 0px' }} transition={{ duration: 1.2, ease: EASE }}>
       <motion.img src={src} alt={alt} loading={eager ? 'eager' : 'lazy'} style={{ y: reduce ? 0 : y, objectPosition: pos }} />
     </motion.div>
@@ -128,33 +128,36 @@ export function Magnetic({ children, pull = 0.28, className }) {
 // The side under the pointer rises toward you, the shadow deepens and slides with the lean, and a glare follows the
 // pointer. Critically damped springs, so it settles without a wobble. Mouse only: on touch it rests raised and still.
 const LEAN = { stiffness: 210, damping: 29 };
-export function Tilt({ children, className = '', max = 5 }) {
+// the lean as a hook, so a motion element that already exists (a gallery photo, say) can take it without a wrapper
+export function useTilt(max = 5) {
   const reduce = useReducedMotion();
   const rx = useMotionValue(0), ry = useMotionValue(0), up = useMotionValue(0);
   const gx = useMotionValue(50), gy = useMotionValue(20);
   const sx = useSpring(rx, LEAN), sy = useSpring(ry, LEAN), lift = useSpring(up, LEAN);
   const y = useTransform(lift, v => v * -8);
-  const shadow = useTransform([sy, lift], ([b, l]) => {
-    const ox = (-b * 1.6).toFixed(1), d = 1 + l * 0.7;
-    return `0 1px 1px rgb(15 35 29 / .05), ${ox * 0.4}px ${(6 * d).toFixed(1)}px ${(14 * d).toFixed(1)}px -4px rgb(15 35 29 / ${(0.08 + l * 0.04).toFixed(3)}), `
-      + `${ox}px ${(26 * d).toFixed(1)}px ${(56 * d).toFixed(1)}px -18px rgb(15 35 29 / ${(0.2 + l * 0.08).toFixed(3)})`;
+  const boxShadow = useTransform([sy, lift], ([b, l]) => {
+    const ox = -b * 1.6, d = 1 + l * 0.7;
+    return `0 1px 1px rgb(15 35 29 / .05), ${(ox * 0.4).toFixed(1)}px ${(6 * d).toFixed(1)}px ${(14 * d).toFixed(1)}px -4px rgb(15 35 29 / ${(0.08 + l * 0.04).toFixed(3)}), `
+      + `${ox.toFixed(1)}px ${(26 * d).toFixed(1)}px ${(56 * d).toFixed(1)}px -18px rgb(15 35 29 / ${(0.2 + l * 0.08).toFixed(3)})`;
   });
   const glare = useMotionTemplate`radial-gradient(circle at ${gx}% ${gy}%, rgb(255 255 255 / .28), rgb(255 255 255 / 0) 55%)`;
-  const move = e => {
+  const onPointerMove = e => {
     if (e.pointerType !== 'mouse' || reduce) return;
     const r = e.currentTarget.getBoundingClientRect();
     const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
     rx.set((py - 0.5) * 2 * max); ry.set(-(px - 0.5) * 2 * max); up.set(1);
     gx.set(px * 100); gy.set(py * 100);
   };
-  const leave = () => { rx.set(0); ry.set(0); up.set(0); };
-  return (
-    <motion.div className={`tilt ${className}`} onPointerMove={move} onPointerLeave={leave}
-      style={reduce ? undefined : { rotateX: sx, rotateY: sy, y, boxShadow: shadow }}>
-      {children}
-      <motion.i className="tilt__glare" aria-hidden="true" style={{ backgroundImage: glare, opacity: lift }} />
-    </motion.div>
-  );
+  const onPointerLeave = () => { rx.set(0); ry.set(0); up.set(0); };
+  return {
+    handlers: { onPointerMove, onPointerLeave },
+    style: reduce ? {} : { rotateX: sx, rotateY: sy, y, boxShadow },
+    glare: <motion.i className="tilt__glare" aria-hidden="true" style={{ backgroundImage: glare, opacity: lift }} />,
+  };
+}
+export function Tilt({ children, className = '', max = 5 }) {
+  const t = useTilt(max);
+  return <motion.div className={`tilt ${className}`} {...t.handlers} style={t.style}>{children}{t.glare}</motion.div>;
 }
 
 /* ---------- a number that counts up once ---------- */

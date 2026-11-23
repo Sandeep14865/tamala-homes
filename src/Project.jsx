@@ -2,7 +2,7 @@
 // Google map, construction progress (when building), the visit form, and the way to the other projects.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup, useMotionValue, useTransform } from 'framer-motion';
-import { Link, BASE, Words, Rise, Picture, Counter, Arrow, EASE, SPRING, FLICK, project, tick } from './lib.jsx';
+import { Link, BASE, Words, Rise, Picture, Counter, Arrow, EASE, SPRING, FLICK, project, tick, useTilt } from './lib.jsx';
 import { Nav, Hero, Viz, Head, Visit, Footer, gmaps, wa } from './components.jsx';
 import { PROJECTS, PLANS, MAP, STATUS, flatsFor } from './data.js';
 import { PAGES, ORDER } from './content.js';
@@ -188,6 +188,21 @@ function Lightbox({ id, g, open, setOpen }) {
 }
 
 /* ---------- gallery: a wall of photographs; a press opens one large ---------- */
+// a gallery photo: a raised sheet that unmasks once, then leans toward the mouse. The mask comes off when it has
+// opened (clip-path 'none'), or it would also cut off the shadow that lifts the photo off the page.
+function WallItem({ src, alt, i, id, onOpen }) {
+  const t = useTilt(4);
+  return (
+    <motion.button type="button" className="wall__item" data-cursor="Open" onClick={onOpen} aria-label={`Open the photograph: ${alt}`}
+      {...t.handlers} style={t.style}
+      initial={{ clipPath: 'inset(100% 0% 0% 0%)' }} whileInView={{ clipPath: 'inset(0% 0% 0% 0%)', transitionEnd: { clipPath: 'none' } }}
+      viewport={{ once: true, margin: '0px 0px -8% 0px' }} transition={{ duration: 1.1, ease: EASE, delay: 0.08 * i }}>
+      <motion.img layoutId={`g-${id}-${i}`} src={`${BASE}/media/img/${src}`} alt={alt} loading="lazy" />
+      {t.glare}
+    </motion.button>
+  );
+}
+
 function Gallery({ page }) {
   const [open, setOpen] = useState(-1);
   const g = page.gallery;
@@ -207,13 +222,7 @@ function Gallery({ page }) {
       <div className="wrap">
         <Head id="gallery-h" text="Inside a finished flat" />
         <div className="wall">
-          {g.map(([src, alt], i) => (
-            <motion.button key={src} type="button" className="wall__item" data-cursor="Open" onClick={() => setOpen(i)} aria-label={`Open the photograph: ${alt}`}
-              initial={{ clipPath: 'inset(100% 0% 0% 0%)' }} whileInView={{ clipPath: 'inset(0% 0% 0% 0%)' }} viewport={{ once: true, margin: '0px 0px -8% 0px' }}
-              transition={{ duration: 1.1, ease: EASE, delay: 0.08 * i }}>
-              <motion.img layoutId={`g-${page.key}-${i}`} src={`${BASE}/media/img/${src}`} alt={alt} loading="lazy" />
-            </motion.button>
-          ))}
+          {g.map(([src, alt], i) => <WallItem key={src} src={src} alt={alt} i={i} id={page.key} onOpen={() => setOpen(i)} />)}
         </div>
       </div>
       <AnimatePresence>{open >= 0 && <Lightbox id={page.key} g={g} open={open} setOpen={setOpen} />}</AnimatePresence>

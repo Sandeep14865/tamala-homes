@@ -46,7 +46,7 @@ Routes: `/`, `/projects/<key>`, `/privacy`, `/terms`, `/credits`.
 - **Contrast:** text must pass WCAG AA (muted grey is `#56665e` for that reason). Check new colour pairs before using them.
 - **Enquiries go through WhatsApp:** the visit form and the "Ask about this flat" button open a pre-filled WhatsApp message; email is only a fallback link.
 - **Floor plans add up:** carpet area is worked out from the drawn rooms and shown next to the balcony and the super built-up figure. If you change a plan, the drawn rooms must stay below the super built-up area.
-- **Project cards are raised sheets** (`Tilt` in `lib.jsx`): a paler surface with a three-depth shadow, floating a layer above the page. On a mouse they lift and lean toward the pointer, with a glare; on touch they rest raised and still.
+- **Raised sheets:** cards and panels float a layer above the page, sharing `--sheet`, `--lift` and `--edge` in `styles.css` (project cards, flat panel, maps, 3D frames, visit form and photo, gallery photos, amenity discs). Things you click as a whole (project cards, gallery photos) also lift and lean toward the mouse (`Tilt` / `useTilt` in `lib.jsx`); maps and 3D views you drag stay level. On touch they rest raised and still. A clip-path cuts off a shadow, so reveal masks are dropped once open.
 - **Tower view:** only the selected flat is coloured.
 - **Map section:** a Google Maps embed with project tabs and drive-time rows that draw the route (keyless embed URLs).
 - **Amenities:** round photos that roll in; a swipe row on phones.
