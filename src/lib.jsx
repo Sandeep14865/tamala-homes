@@ -189,6 +189,34 @@ export const Arrow = () => (
 // with its own scripts) mount only then, so they cost nothing to visitors who never scroll that far
 export const useNear = (ref, margin = '600px 0px') => useInView(ref, { once: true, margin });
 
+// Keeps the keyboard inside an open layer (the phone menu, the photo viewer): Tab and Shift+Tab go round its controls
+// only, Escape closes it, and focus goes back where it was when it closes. `els` lists the layer's own elements
+// (a container, or a button that sits outside it, like the menu's close button in the bar).
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+export function useFocusTrap(active, els, onClose, first) {
+  const close = useRef(onClose); close.current = onClose;
+  useEffect(() => {
+    if (!active) return;
+    const before = document.activeElement;
+    const list = () => els().filter(Boolean).flatMap(e => (e.matches(FOCUSABLE) ? [e] : [...e.querySelectorAll(FOCUSABLE)]))
+      .filter(e => e.offsetParent !== null || e === document.activeElement);
+    { const f = (first && first()) || list()[0]; f && f.focus({ preventScroll: true }); }   // the layer is in the page by now: focus it at once
+    const key = e => {
+      if (e.key === 'Escape') { e.preventDefault(); close.current(); return; }
+      if (e.key !== 'Tab') return;
+      const l = list(); if (!l.length) return;
+      const i = l.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); l[l.length - 1].focus(); }
+      else if (!e.shiftKey && (i === -1 || i === l.length - 1)) { e.preventDefault(); l[0].focus(); }
+    };
+    document.addEventListener('keydown', key);
+    return () => {
+      document.removeEventListener('keydown', key);
+      if (before && before.focus && document.contains(before)) before.focus({ preventScroll: true });
+    };
+  }, [active]);   // eslint-disable-line react-hooks/exhaustive-deps
+}
+
 export function useMedia(q) {
   const [m, setM] = useState(() => window.matchMedia(q).matches);
   useEffect(() => {

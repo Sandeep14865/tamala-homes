@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, useMotionValueEvent, useReducedMotion, animate } from 'framer-motion';
 import { Spot } from './Orb.jsx';
-import { Link, BASE, Words, Rise, Picture, Magnetic, Arrow, EASE, SPRING, tick, useReady, useMedia, srcSet } from './lib.jsx';
+import { Link, BASE, Words, Rise, Picture, Magnetic, Arrow, EASE, SPRING, tick, useReady, useMedia, srcSet, useFocusTrap } from './lib.jsx';
 import { CONTACT } from './data.js';
 import { PAGES, ORDER, HOURS } from './content.js';
 import { webglOK } from './three/gl.js';
@@ -72,6 +72,9 @@ export function Nav({ links, solidAlways }) {
   const [hidden, setHidden] = useState(false);
   const [solid, setSolid] = useState(!!solidAlways);
   const [open, setOpen] = useState(false);
+  const toggleRef = useRef(null), menuRef = useRef(null);
+  // while the menu is open the keyboard stays in it (its links and the close button), and Escape closes it
+  useFocusTrap(open, () => [toggleRef.current, menuRef.current], () => setOpen(false));
   useMotionValueEvent(scrollY, 'change', v => {
     const prev = scrollY.getPrevious() ?? 0;
     setHidden(v > prev && v > 240);
@@ -90,14 +93,14 @@ export function Nav({ links, solidAlways }) {
             {links.map(([label, to]) => <Link key={label} className="nav__link" to={to}>{label}</Link>)}
           </nav>
           <a className="btn btn--solid nav__cta" href="#visit">Book a site visit</a>
-          <button className="nav__toggle" type="button" aria-expanded={open} aria-label={open ? 'Close the menu' : 'Open the menu'} onClick={() => setOpen(o => !o)}>
+          <button className="nav__toggle" type="button" ref={toggleRef} aria-controls="menu" aria-expanded={open} aria-label={open ? 'Close the menu' : 'Open the menu'} onClick={() => setOpen(o => !o)}>
             <span /><span />
           </button>
         </div>
       </motion.header>
       <AnimatePresence>
         {open && (
-          <motion.div className="menu" initial={{ clipPath: 'circle(0% at calc(100% - 44px) 34px)' }} animate={{ clipPath: 'circle(160% at calc(100% - 44px) 34px)' }} exit={{ clipPath: 'circle(0% at calc(100% - 44px) 34px)' }}
+          <motion.div className="menu" id="menu" ref={menuRef} initial={{ clipPath: 'circle(0% at calc(100% - 44px) 34px)' }} animate={{ clipPath: 'circle(160% at calc(100% - 44px) 34px)' }} exit={{ clipPath: 'circle(0% at calc(100% - 44px) 34px)' }}
             transition={{ type: 'spring', bounce: 0, duration: 0.6 }}>
             <nav className="wrap menu__links" aria-label="Menu">
               {[...links, ['Book a site visit', '#visit']].map(([label, to], i) => (

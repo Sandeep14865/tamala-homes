@@ -2,7 +2,7 @@
 // Google map, construction progress (when building), the visit form, and the way to the other projects.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup, useMotionValue, useTransform } from 'framer-motion';
-import { Link, BASE, Words, Rise, Picture, Counter, Arrow, EASE, SPRING, FLICK, project, tick, useTilt, srcSet, useNear } from './lib.jsx';
+import { Link, BASE, Words, Rise, Picture, Counter, Arrow, EASE, SPRING, FLICK, project, tick, useTilt, srcSet, useNear, useFocusTrap } from './lib.jsx';
 import { Nav, Hero, Viz, Head, Visit, Footer, gmaps, wa } from './components.jsx';
 import { PROJECTS, PLANS, MAP, STATUS, flatsFor } from './data.js';
 import { PAGES, ORDER } from './content.js';
@@ -140,10 +140,13 @@ function Plans({ page }) {
             <ul className="rows rows--tight rows--hover" aria-label="Rooms" onMouseLeave={() => setRoom(null)}>
               <AnimatePresence mode="popLayout" initial={false}>
                 {plan.rooms.map((r, i) => (
-                  <motion.li key={`${bhk}-${r.id}`} tabIndex={0} className={room === r.id ? 'is-on' : undefined}
+                  <motion.li key={`${bhk}-${r.id}`} className={room === r.id ? 'is-on' : undefined}
                     initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3, delay: 0.02 * i }}
-                    onMouseEnter={() => setRoom(r.id)} onFocus={() => setRoom(r.id)} onClick={() => setRoom(r.id)}>
-                    <span>{r.name}</span><span className="num">{r.w} × {r.d} ft</span>
+                    onMouseEnter={() => setRoom(r.id)}>
+                    {/* a real button: it shows the room on the plan when focused or pressed */}
+                    <button type="button" className="rows__btn" aria-pressed={room === r.id} onFocus={() => setRoom(r.id)} onClick={() => setRoom(r.id)}>
+                      <span>{r.name}</span><span className="num">{r.w} × {r.d} ft</span>
+                    </button>
                   </motion.li>
                 ))}
               </AnimatePresence>
@@ -170,8 +173,12 @@ function Lightbox({ id, g, open, setOpen }) {
     if (Math.abs(py) > 220 && Math.abs(py) > Math.abs(px)) { tick(); setOpen(-1); }
     else if (px < -180) step(1); else if (px > 180) step(-1);
   };
+  // the keyboard stays in the viewer: Tab goes round its buttons, Escape closes it, and focus returns to the photo
+  // that opened it (the arrow keys are handled by the gallery)
+  const box = useRef(null), closeBtn = useRef(null);
+  useFocusTrap(true, () => [box.current], () => setOpen(-1), () => closeBtn.current);
   return (
-    <motion.div className="lightbox" role="dialog" aria-modal="true" aria-label="Photograph" onClick={() => setOpen(-1)}
+    <motion.div className="lightbox" ref={box} role="dialog" aria-modal="true" aria-label={`Photograph ${open + 1} of ${g.length}`} onClick={() => setOpen(-1)}
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
       <motion.div className="lightbox__scrim" style={{ opacity: dim }} />
       <motion.img key={open} layoutId={`g-${id}-${open}`} src={`${BASE}/media/img/${g[open][0]}`} alt={g[open][1]} draggable={false}
@@ -179,9 +186,9 @@ function Lightbox({ id, g, open, setOpen }) {
         dragTransition={{ bounceStiffness: 320, bounceDamping: 30 }} onDragEnd={end} onClick={e => e.stopPropagation()} transition={FLICK} />
       <div className="lightbox__bar" onClick={e => e.stopPropagation()}>
         <button type="button" onClick={() => step(-1)} aria-label="Previous photograph"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" strokeWidth="1.6" /></svg></button>
-        <span className="num">{open + 1} / {g.length}</span>
+        <span className="num" aria-live="polite">{open + 1} / {g.length}</span>
         <button type="button" onClick={() => step(1)} aria-label="Next photograph"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.6" /></svg></button>
-        <button type="button" className="lightbox__close" onClick={() => setOpen(-1)} autoFocus>Close</button>
+        <button type="button" className="lightbox__close" ref={closeBtn} onClick={() => setOpen(-1)}>Close</button>
       </div>
     </motion.div>
   );

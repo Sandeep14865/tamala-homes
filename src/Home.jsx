@@ -27,10 +27,25 @@ function Projects() {
   }, [pin]);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
   const x = useTransform(scrollYProgress, v => -v * dist);
+  // the run moves sideways only as the page scrolls, so a card reached with Tab could sit off the screen: scroll the
+  // page to where that card stands at the left edge (the frame's own sideways jump is undone in onScroll below)
+  const onFocus = e => {
+    if (!pin) return;
+    const card = e.target.closest('.pcard, .projects__intro'), sec = ref.current;
+    if (!card || !sec) return;
+    const gut = parseFloat(getComputedStyle(track.current).paddingLeft) || 0;
+    const p = Math.min(1, Math.max(0, (card.offsetLeft - gut) / (dist || 1)));
+    // a moment later, so the browser's own scroll-into-view on focus has run and doesn't cancel this one
+    setTimeout(() => {
+      const top = sec.getBoundingClientRect().top + scrollY;
+      window.scrollTo({ top: top + p * (sec.offsetHeight - innerHeight), behavior: reduce ? 'auto' : 'smooth' });
+    }, 0);
+  };
   return (
     <section className={`projects${pin ? ' is-pinned' : ''}`} id="projects" ref={ref} aria-labelledby="projects-h">
-      <div className="projects__sticky">
-        <motion.div className="projects__track" ref={track} style={{ x: pin ? x : 0 }}>
+      {/* the frame clips the run and never scrolls itself; a browser scrolling it to show a focused card is put back */}
+      <div className="projects__sticky" onScroll={e => { if (e.currentTarget.scrollLeft) e.currentTarget.scrollLeft = 0; }}>
+        <motion.div className="projects__track" ref={track} style={{ x: pin ? x : 0 }} onFocus={onFocus}>
           <div className="projects__intro">
             <Words as="h2" id="projects-h" parts={[{ t: 'Three projects in Guntur.' }, { t: 'One ready, one rising, one about to open.', muted: true }]} />
             <dl className="stats">
@@ -75,6 +90,12 @@ function MapSection() {
     : `https://www.google.com/maps?q=${p.ll}&z=15&output=embed`;
   const box = useRef(null), near = useNear(box);
   const pick = k => { setSel(k); setTo(-1); };
+  const tabKeys = e => {
+    const i = ORDER.indexOf(sel), n = ORDER.length;
+    const j = { ArrowRight: (i + 1) % n, ArrowLeft: (i - 1 + n) % n, Home: 0, End: n - 1 }[e.key];
+    if (j === undefined) return;
+    e.preventDefault(); pick(ORDER[j]); document.getElementById(`map-tab-${ORDER[j]}`).focus();
+  };
   const route = i => setTo(t => (t === i ? -1 : i));
   return (
     <section className="section section--surface" id="map" aria-labelledby="map-h">
@@ -87,12 +108,13 @@ function MapSection() {
             </AnimatePresence></p>
             <ul className="rows rows--hover rows--route">
               {MAP.landmarks.map((l, i) => (
-                <Rise as="li" key={l.name} delay={0.05 * i} className={to === i ? 'is-on' : undefined} tabIndex={0} role="button" aria-pressed={to === i}
-                  onClick={() => route(i)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); route(i); } }}>
+                <Rise as="li" key={l.name} delay={0.05 * i} className={to === i ? 'is-on' : undefined}>
+                  <button type="button" className="rows__btn" aria-pressed={to === i} onClick={() => route(i)}>
                   <span>{l.name}</span>
                   <span className="num"><AnimatePresence mode="popLayout" initial={false}>
                     <motion.b key={sel} initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -14, opacity: 0 }} transition={{ duration: 0.35 }}>{l.min[sel]} min</motion.b>
                   </AnimatePresence><i className="rows__go" aria-hidden="true"><Arrow /></i></span>
+                  </button>
                 </Rise>
               ))}
             </ul>
@@ -104,16 +126,18 @@ function MapSection() {
           </div>
           <div className="mapcard">
             <LayoutGroup id="map-tabs">
-              <div className="seg mapcard__tabs" role="tablist" aria-label="Projects">
+              {/* real tabs: one Tab stop, the arrow keys (and Home, End) move between projects and choose as they go */}
+              <div className="seg mapcard__tabs" role="tablist" aria-label="Projects" onKeyDown={tabKeys}>
                 {ORDER.map(k => (
-                  <button key={k} type="button" role="tab" aria-selected={sel === k} aria-pressed={sel === k} onClick={() => pick(k)}>
+                  <button key={k} id={`map-tab-${k}`} type="button" role="tab" aria-selected={sel === k} aria-controls="map-panel"
+                    tabIndex={sel === k ? 0 : -1} onClick={() => pick(k)}>
                     {sel === k && <motion.i layoutId="map-tab" className="seg__thumb" transition={SPRING} />}
                     <span>{PAGES[k].short}</span>
                   </button>
                 ))}
               </div>
             </LayoutGroup>
-            <div className="gmap mapcard__map" ref={box}>
+            <div className="gmap mapcard__map" ref={box} id="map-panel" role="tabpanel" aria-labelledby={`map-tab-${sel}`}>
               <AnimatePresence initial={false}>
                 {near && <motion.iframe key={src} src={src} title={dest ? `Google map: the way from ${p.short} to ${dest.name}` : `Google map of ${p.place}, Guntur`}
                   loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen
@@ -151,11 +175,13 @@ function Promise_() {
     <section className="section section--dark promise" id="promise" aria-label="Our promise">
       <div className="wrap has-spot"><Spot shape="ring" />
         <Rise as="p" className="label">How we hand over</Rise>
-        <p className="promise__text" ref={ref} aria-label={PROMISE.join(' ')}>
+        {/* screen readers get the sentence whole; the word-by-word copy is only for the eye */}
+        <p className="promise__text" ref={ref}>
+          <span className="sr-only">{PROMISE.join(' ')}</span>
           {PROMISE.map((w, i) => {
             const strong = i >= STRONG[0] && i <= STRONG[1];
             return reduce
-              ? <span key={i} className={strong ? 'is-strong' : undefined}>{w} </span>
+              ? <span key={i} className={strong ? 'is-strong' : undefined} aria-hidden="true">{w} </span>
               : <span key={i} className={strong ? 'is-strong' : undefined} aria-hidden="true"><Lit progress={scrollYProgress} i={i} n={PROMISE.length}>{w}</Lit></span>;
           })}
         </p>

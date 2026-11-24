@@ -235,10 +235,18 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
 .map__from { margin-bottom: 14px; font-size: 0.9375rem; color: var(--muted); }
 .map__from b { display: inline-block; font-weight: 600; color: var(--ink); }
 .rows--route > li { cursor: pointer; }
+/* a row that is a control: the button fills the row and takes its layout, so the whole line is the target */
+.rows > li:has(> .rows__btn) { padding-block: 0; }
+.rows__btn { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; width: 100%; padding: 15px 0; text-align: left; font: inherit; color: inherit; cursor: pointer; outline-offset: -2px; }
+.rows--tight .rows__btn { padding: 8px 0; }
+.rows__btn > span:first-child { font-weight: 500; }
+.rows__btn > :last-child { text-align: right; }
+.rows > li > .rows__btn { color: inherit; text-align: left; }
+.rows__btn:focus-visible { outline-offset: 4px; border-radius: 4px; }   /* the row's own colour, not the muted end-of-row one */
 .rows--route .num { display: inline-flex; align-items: baseline; gap: 10px; overflow: visible; }
 .rows--route .num b { overflow: hidden; }
 .rows__go { display: inline-flex; width: 14px; opacity: 0; translate: -6px 0; transition: opacity .2s, translate .3s var(--ease); }
-.rows--route > li:is(:hover, .is-on, :focus-visible) .rows__go { opacity: 1; translate: 0 0; }
+.rows--route > li:is(:hover, .is-on, :focus-within) .rows__go { opacity: 1; translate: 0 0; }
 .mapcard { display: grid; gap: 14px; position: sticky; top: 12vh; min-width: 0; }
 .mapcard__tabs { justify-self: start; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .mapcard__tabs button { white-space: nowrap; }
@@ -358,7 +366,7 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
 .seg { display: inline-flex; padding: 3px; border: 1px solid color-mix(in oklab, var(--ink) 22%, transparent); border-radius: var(--r); }
 .seg button { position: relative; min-height: 40px; padding: 0 16px; font-size: 0.9375rem; font-weight: 500; transition: color .25s; }
 .seg button span { position: relative; }
-.seg button[aria-pressed="true"] { color: var(--bg); }
+.seg button:is([aria-pressed="true"], [aria-selected="true"]) { color: var(--bg); }   /* toggle buttons and real tabs */
 .seg__thumb { position: absolute; inset: 0; border-radius: calc(var(--r) - 2px); background: var(--ink); }
 .seg-row { display: flex; flex-wrap: wrap; gap: 12px; }
 .legend { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 0.875rem; }
