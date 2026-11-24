@@ -2,7 +2,7 @@
 // the four build stages, amenities, the visit form.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useInView, useReducedMotion, LayoutGroup } from 'framer-motion';
-import { Link, BASE, Words, Rise, Picture, Counter, Arrow, Tilt, EASE, SPRING, useMedia } from './lib.jsx';
+import { Link, BASE, Words, Rise, Picture, Counter, Arrow, Tilt, EASE, SPRING, useMedia, srcSet, useNear } from './lib.jsx';
 import { Nav, Hero, Head, Visit, Footer, gmaps } from './components.jsx';
 import { PROJECTS, MAP } from './data.js';
 import { PAGES, ORDER, STAGES, AMENITIES } from './content.js';
@@ -44,7 +44,7 @@ function Projects() {
             return (
               <Link key={k} className="pcard" to={`/projects/${k}`} data-cursor="View">
                 <Tilt className="pcard__body">
-                  <Picture className="pcard__pic" src={`${BASE}/media/img/${p.cardImg}`} alt={p.cardAlt} pos={p.cardPos} strength={pin ? 0 : 6} />
+                  <Picture className="pcard__pic" src={`${BASE}/media/img/${p.cardImg}`} alt={p.cardAlt} pos={p.cardPos} sizes="(max-width: 1023px) 100vw, 54vw" strength={pin ? 0 : 6} />
                   <div className="pcard__text">
                     <Rise as="span" className="chip" delay={0.1}>{p.status}</Rise>
                     <Words as="h3" text={p.short} delay={0.1} />
@@ -73,6 +73,7 @@ function MapSection() {
   const src = dest
     ? `https://www.google.com/maps?saddr=${enc(from)}&daddr=${enc(inGuntur(dest.name))}&output=embed`
     : `https://www.google.com/maps?q=${p.ll}&z=15&output=embed`;
+  const box = useRef(null), near = useNear(box);
   const pick = k => { setSel(k); setTo(-1); };
   const route = i => setTo(t => (t === i ? -1 : i));
   return (
@@ -112,11 +113,11 @@ function MapSection() {
                 ))}
               </div>
             </LayoutGroup>
-            <div className="gmap mapcard__map">
+            <div className="gmap mapcard__map" ref={box}>
               <AnimatePresence initial={false}>
-                <motion.iframe key={src} src={src} title={dest ? `Google map: the way from ${p.short} to ${dest.name}` : `Google map of ${p.place}, Guntur`}
+                {near && <motion.iframe key={src} src={src} title={dest ? `Google map: the way from ${p.short} to ${dest.name}` : `Google map of ${p.place}, Guntur`}
                   loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen
-                  initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.5, delay: 0.25 } }} exit={{ opacity: 0, transition: { duration: 0.3, delay: 0.6 } }} />
+                  initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.5, delay: 0.25 } }} exit={{ opacity: 0, transition: { duration: 0.3, delay: 0.6 } }} />}
               </AnimatePresence>
             </div>
             <div className="mapcard__note">
@@ -158,7 +159,7 @@ function Promise_() {
               : <span key={i} className={strong ? 'is-strong' : undefined} aria-hidden="true"><Lit progress={scrollYProgress} i={i} n={PROMISE.length}>{w}</Lit></span>;
           })}
         </p>
-        <Picture className="promise__pic" src={BASE + "/media/img/living-warm.webp"} alt="A finished living room with a white sofa, wood panelling and a dining table by the window" pos="50% 60%" strength={10} />
+        <Picture className="promise__pic" sizes="100vw" src={BASE + "/media/img/living-warm.webp"} alt="A finished living room with a white sofa, wood panelling and a dining table by the window" pos="50% 60%" strength={10} />
       </div>
     </section>
   );
@@ -174,7 +175,7 @@ function Stage({ i, s, active, onActive }) {
       <span className="stages__n num">0{i + 1}</span>
       <h3>{s[0]}</h3>
       <p>{s[1]}</p>
-      <img className="stages__inline" src={`${BASE}/media/img/${s[2]}`} alt={s[3]} loading="lazy" />
+      <img className="stages__inline" src={`${BASE}/media/img/${s[2]}`} srcSet={srcSet(`${BASE}/media/img/${s[2]}`)} sizes="100vw" alt={s[3]} loading="lazy" />
     </motion.li>
   );
 }
@@ -201,7 +202,7 @@ function Stages() {
               {STAGES.map((s, i) => {
                 const on = i === active, under = i === prev && !on;
                 return (
-                  <motion.img key={s[2]} src={`${BASE}/media/img/${s[2]}`} alt={on ? s[3] : ''} loading="lazy"
+                  <motion.img key={s[2]} src={`${BASE}/media/img/${s[2]}`} srcSet={srcSet(`${BASE}/media/img/${s[2]}`)} sizes="50vw" alt={on ? s[3] : ''} loading="lazy"
                     style={{ zIndex: on ? 2 : under ? 1 : 0, visibility: on || under ? 'visible' : 'hidden' }}
                     initial={false}
                     animate={on ? { clipPath: 'inset(0% 0% 0% 0%)', scale: 1 } : { clipPath: down ? 'inset(100% 0% 0% 0%)' : 'inset(0% 0% 100% 0%)', scale: 1.08 }}
@@ -233,7 +234,7 @@ function Amenities() {
               <motion.div className="roll__disc"
                 variants={{ away: { x: '70vw', rotate: 220 }, here: { x: 0, rotate: 0 } }}
                 transition={{ duration: 1.5 + 0.1 * i, delay: 0.12 * i, ease: [0.16, 0.8, 0.24, 1] }}>
-                <img src={`${BASE}/media/img/${m[2]}`} alt={m[3]} loading="lazy" draggable={false} />
+                <img src={`${BASE}/media/img/${m[2]}`} srcSet={srcSet(`${BASE}/media/img/${m[2]}`)} sizes="(max-width: 1023px) 72vw, 25vw" alt={m[3]} loading="lazy" draggable={false} />
               </motion.div>
               <motion.div className="roll__text"
                 variants={{ away: { opacity: 0, y: 16 }, here: { opacity: 1, y: 0 } }}

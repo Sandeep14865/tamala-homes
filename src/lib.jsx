@@ -1,5 +1,5 @@
 // Small shared pieces: a history router, and the motion helpers every page uses.
-import { Fragment, useSyncExternalStore, useRef, useEffect, useState, createContext, useContext } from 'react';
+import { Fragment, forwardRef, useSyncExternalStore, useRef, useEffect, useState, createContext, useContext } from 'react';
 import { motion, useInView, useMotionValue, useSpring, useScroll, useTransform, useReducedMotion, useMotionTemplate, animate } from 'framer-motion';
 
 export const EASE = [0.2, 0.7, 0.2, 1];
@@ -25,6 +25,13 @@ export const takeScroll = () => { const y = landY; landY = 0; return y; };
 export const BASE = import.meta.env.BASE_URL.replace(/\/+$/, '');
 const strip = p => (BASE && p.startsWith(BASE) ? p.slice(BASE.length) : p).replace(/\/+$/, '') || '/';
 const clean = () => strip(location.pathname);
+// every photo in media/img also comes 1200, 800 and 480 px wide (made by scripts/sizes.mjs); the browser picks the
+// smallest that fills the slot at the screen's pixel density (a 390 px phone at 3x wants 1200). The full-size file is
+// 1100 to 1800 px; it is listed as 1800w, so only wide, sharp screens fetch it.
+export const srcSet = src => {
+  const m = typeof src === 'string' && src.match(/^(.*\/media\/img\/)([^/]+\.webp)$/);
+  return m ? `${m[1]}480/${m[2]} 480w, ${m[1]}800/${m[2]} 800w, ${m[1]}1200/${m[2]} 1200w, ${src} 1800w` : undefined;
+};
 const full = to => (to.startsWith('/') ? BASE + to : to);
 export function navigate(to) {
   const [p, h] = to.split('#');
@@ -86,16 +93,16 @@ export function Words({ as: Tag = 'h2', parts, text, className, delay = 0, step 
 }
 
 /* ---------- a block that fades up when it arrives ---------- */
-export function Rise({ as = 'div', delay = 0, y = 26, children, ...rest }) {
+export const Rise = forwardRef(function Rise({ as = 'div', delay = 0, y = 26, children, ...rest }, ref) {
   const M = motion[as];
   return (
-    <M initial={{ opacity: 0, y }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '0px 0px -10% 0px' }}
+    <M ref={ref} initial={{ opacity: 0, y }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '0px 0px -10% 0px' }}
       transition={{ duration: 0.8, ease: EASE, delay }} {...rest}>{children}</M>
   );
-}
+});
 
 /* ---------- a picture that unmasks from the bottom and drifts inside its frame ---------- */
-export function Picture({ src, alt, className = '', pos, strength = 8, reveal = true, eager, ...rest }) {
+export function Picture({ src, alt, className = '', pos, strength = 8, reveal = true, eager, sizes = '(max-width: 1023px) 100vw, 50vw', ...rest }) {
   const ref = useRef(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
@@ -104,7 +111,7 @@ export function Picture({ src, alt, className = '', pos, strength = 8, reveal = 
     <motion.div ref={ref} className={`pic ${className}`} {...rest}
       initial={reveal ? { clipPath: 'inset(100% 0% 0% 0%)' } : false} whileInView={{ clipPath: 'inset(0% 0% 0% 0%)', transitionEnd: { clipPath: 'none' } }}   // unmasked: drop the mask so a shadow can show
       viewport={{ once: true, margin: '0px 0px -8% 0px' }} transition={{ duration: 1.2, ease: EASE }}>
-      <motion.img src={src} alt={alt} loading={eager ? 'eager' : 'lazy'} style={{ y: reduce ? 0 : y, objectPosition: pos }} />
+      <motion.img src={src} srcSet={srcSet(src)} sizes={sizes} alt={alt} loading={eager ? 'eager' : 'lazy'} style={{ y: reduce ? 0 : y, objectPosition: pos }} />
     </motion.div>
   );
 }
@@ -177,6 +184,10 @@ export function Counter({ to, suffix = '', duration = 1.6 }) {
 export const Arrow = () => (
   <svg className="arrow" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 6h9M6 2l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>
 );
+
+// true once the element comes within a screen or so of the viewport, and stays true: heavy embeds (a Google map,
+// with its own scripts) mount only then, so they cost nothing to visitors who never scroll that far
+export const useNear = (ref, margin = '600px 0px') => useInView(ref, { once: true, margin });
 
 export function useMedia(q) {
   const [m, setM] = useState(() => window.matchMedia(q).matches);

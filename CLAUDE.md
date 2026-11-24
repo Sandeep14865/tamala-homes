@@ -29,12 +29,15 @@ Routes: `/`, `/projects/<key>`, `/privacy`, `/terms`, `/credits`.
 - `npm run dev`: dev server on http://localhost:5173/
 - `npm run build`: builds to `dist/`, then `scripts/spa-pages.mjs` copies `index.html` to every route and to `404.html` for static hosting
 - `node scripts/posters.mjs`: regenerates the 3D poster images (needs the dev server running)
+- `node scripts/sizes.mjs`: makes the 480, 800 and 1200 px copies of every photo in `public/media/img` (run it after adding or changing a photo)
 
 ## Rules that must hold
 
 - **Paths go through `BASE`.** The site is served from the `/tamala-homes/` sub-folder. Media and file paths are written as `` `${BASE}/media/...` `` and links use `Link` from `src/lib.jsx`. A bare `/media/...` string breaks the live site.
 - **Text selection is off site-wide** (`user-select: none`). This is deliberate.
 - **Motion:** use springs with no bounce (`SPRING` in `lib.jsx`); bounce only after a flick or drag. Every animation needs a calm `prefers-reduced-motion` fallback.
+- **Keep it light on phones.** Photos go through `srcSet()` in `lib.jsx` (Picture does it for you) with a `sizes` that matches the slot. The hero film is 1.9 MB on desktop and 0.7 MB on phones (H.264, no sound), skipped on Save-Data and 3G or slower, where the WebP poster stays. Google maps mount only when they come near (`useNear`).
+- **Each page has its own title and link preview.** `scripts/spa-pages.mjs` writes them into every route's HTML at build time with absolute addresses (`SITE_URL`, default the Pages address). A new route goes in its list, with a 1200×630 share picture in `public/`.
 - **Mobile is a first-class target.** Check every change at 390px wide as well as on desktop.
 
 ## Look (the client's choices: keep them)

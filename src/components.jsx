@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, useMotionValueEvent, useReducedMotion, animate } from 'framer-motion';
 import { Spot } from './Orb.jsx';
-import { Link, BASE, Words, Rise, Picture, Magnetic, Arrow, EASE, SPRING, tick, useReady, useMedia } from './lib.jsx';
+import { Link, BASE, Words, Rise, Picture, Magnetic, Arrow, EASE, SPRING, tick, useReady, useMedia, srcSet } from './lib.jsx';
 import { CONTACT } from './data.js';
 import { PAGES, ORDER, HOURS } from './content.js';
 import { webglOK } from './three/gl.js';
@@ -132,12 +132,14 @@ export function Hero({ word, title, film, image, alt, pos }) {
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.16]);
   const lift = useTransform(scrollYProgress, [0, 1], ['0%', '-28%']);
   const fade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
-  // the film loads after the first paint, never for visitors who asked for less motion or less data
+  // the film loads after the first paint, never for visitors who asked for less motion or less data, nor on a slow
+  // connection (3G or worse): there the still poster stays, and the play button still loads the film on request
   useEffect(() => {
     const v = video.current;
     if (!film || !v || !ready) return;
-    const save = navigator.connection && navigator.connection.saveData;
-    if (reduce || save) return;
+    const c = navigator.connection;
+    const slow = c && (c.saveData || /(^|-)(2g|3g)$/.test(c.effectiveType || ''));
+    if (reduce || slow) return;
     v.src = phone ? BASE + '/media/hero-720p.mp4' : BASE + '/media/hero-1600.mp4';
     v.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
     const io = new IntersectionObserver(([e]) => { if (!v.dataset.paused) e.isIntersecting ? v.play().catch(() => {}) : v.pause(); }, { threshold: 0.1 });
@@ -153,8 +155,8 @@ export function Hero({ word, title, film, image, alt, pos }) {
     <section className="hero" ref={ref} aria-labelledby="hero-h">
       <motion.div className="hero__media" style={{ scale: reduce ? 1 : scale }} initial={{ scale: 1.18 }} animate={{ scale: ready ? 1 : 1.18 }} transition={{ duration: 2.2, ease: EASE }}>
         {film
-          ? <video ref={video} muted loop playsInline preload="none" poster={phone ? BASE + '/media/hero-poster-720p.jpg' : BASE + '/media/hero-poster-1600.jpg'} aria-hidden="true" />
-          : <img src={`${BASE}/media/img/${image}`} alt={alt} style={{ objectPosition: pos }} fetchpriority="high" />}
+          ? <video ref={video} muted loop playsInline preload="none" poster={phone ? BASE + '/media/hero-poster-720p.webp' : BASE + '/media/hero-poster-1600.webp'} aria-hidden="true" />
+          : <img src={`${BASE}/media/img/${image}`} srcSet={srcSet(`${BASE}/media/img/${image}`)} sizes="100vw" alt={alt} style={{ objectPosition: pos }} fetchpriority="high" />}
       </motion.div>
       <div className="hero__shade" aria-hidden="true" />
       {film && (

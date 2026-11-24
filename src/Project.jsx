@@ -2,7 +2,7 @@
 // Google map, construction progress (when building), the visit form, and the way to the other projects.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup, useMotionValue, useTransform } from 'framer-motion';
-import { Link, BASE, Words, Rise, Picture, Counter, Arrow, EASE, SPRING, FLICK, project, tick, useTilt } from './lib.jsx';
+import { Link, BASE, Words, Rise, Picture, Counter, Arrow, EASE, SPRING, FLICK, project, tick, useTilt, srcSet, useNear } from './lib.jsx';
 import { Nav, Hero, Viz, Head, Visit, Footer, gmaps, wa } from './components.jsx';
 import { PROJECTS, PLANS, MAP, STATUS, flatsFor } from './data.js';
 import { PAGES, ORDER } from './content.js';
@@ -197,7 +197,7 @@ function WallItem({ src, alt, i, id, onOpen }) {
       {...t.handlers} style={t.style}
       initial={{ clipPath: 'inset(100% 0% 0% 0%)' }} whileInView={{ clipPath: 'inset(0% 0% 0% 0%)', transitionEnd: { clipPath: 'none' } }}
       viewport={{ once: true, margin: '0px 0px -8% 0px' }} transition={{ duration: 1.1, ease: EASE, delay: 0.08 * i }}>
-      <motion.img layoutId={`g-${id}-${i}`} src={`${BASE}/media/img/${src}`} alt={alt} loading="lazy" />
+      <motion.img layoutId={`g-${id}-${i}`} src={`${BASE}/media/img/${src}`} srcSet={srcSet(`${BASE}/media/img/${src}`)} sizes="(max-width: 639px) 100vw, 60vw" alt={alt} loading="lazy" />
       {t.glare}
     </motion.button>
   );
@@ -268,7 +268,7 @@ function Others({ page }) {
               <Link to={`/projects/${o.key}`} data-cursor="View" onMouseEnter={() => setH(i)} onFocus={() => setH(i)}>
                 <span className="others__name">{o.short}</span>
                 <span className="others__meta">{o.status}<Arrow /></span>
-                <motion.img src={`${BASE}/media/img/${o.cardImg}`} alt="" aria-hidden="true" loading="lazy"
+                <motion.img src={`${BASE}/media/img/${o.cardImg}`} srcSet={srcSet(`${BASE}/media/img/${o.cardImg}`)} sizes="26vw" alt="" aria-hidden="true" loading="lazy"
                   initial={false} animate={{ opacity: h === i ? 1 : 0, scale: h === i ? 1 : 0.86, rotate: h === i ? -3 : 0 }} transition={{ duration: 0.45, ease: EASE }} />
               </Link>
             </Rise>
@@ -282,6 +282,7 @@ function Others({ page }) {
 export default function Project({ page }) {
   useEffect(() => { document.title = `${page.name}: ${page.title}`; }, [page]);
   const place = `${page.place}, Guntur, Andhra Pradesh`;
+  const mapBox = useRef(null), mapNear = useNear(mapBox);
   return (
     <>
       <Nav links={LINKS} />
@@ -319,8 +320,8 @@ export default function Project({ page }) {
                   <a className="link" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place)}`} target="_blank" rel="noopener">Get directions<Arrow /></a>
                 </p>
               </div>
-              <Rise className="gmap fill">
-                <iframe title={`Google map of ${page.place}, Guntur`} src={`https://www.google.com/maps?q=${page.ll}&z=15&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
+              <Rise className="gmap fill" ref={mapBox}>
+                {mapNear && <iframe title={`Google map of ${page.place}, Guntur`} src={`https://www.google.com/maps?q=${page.ll}&z=15&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />}
               </Rise>
             </div>
           </div>
