@@ -46,8 +46,9 @@ Routes: `/`, `/projects/<key>`, `/privacy`, `/terms`, `/credits`.
 - **Colours:** limewash `#f1f2ec` (background), tamala green `#0f231d` (ink and dark sections), action blue `#295290`, muted `#6f7f77`, turmeric `#e0a526`.
 - **Type:** Anek Latin, condensed (`font-stretch: 76%`) for display text.
 - **Hero:** full-screen film or photo, the giant name and one glass button. Nothing else.
-- **Build stages:** the heading and the four stage titles are turmeric, in a deeper shade (`#9c6f0c`) so they pass contrast on the light background; photos change with a wipe, never a blend.
-- **Contrast:** text must pass WCAG AA (muted grey is `#56665e` for that reason). Check new colour pairs before using them.
+- **One yellow:** turmeric `#e0a526` (`--turmeric`) is the only yellow on the site, in every section. Don't add darker or lighter shades of it, even for contrast (the client's choice).
+- **Build stages:** the heading and the four stage titles are turmeric; photos change with a wipe, never a blend.
+- **Contrast:** text must pass WCAG AA (muted grey is `#56665e` for that reason). Check new colour pairs before using them. The one exception is turmeric text on the light background, kept by the client's choice.
 - **Enquiries go through WhatsApp:** the visit form and the "Ask about this flat" button open a pre-filled WhatsApp message; email is only a fallback link.
 - **Floor plans add up:** carpet area is worked out from the drawn rooms and shown next to the balcony and the super built-up figure. If you change a plan, the drawn rooms must stay below the super built-up area.
 - **Raised sheets:** cards and panels float a layer above the page, sharing `--sheet`, `--lift` and `--edge` in `styles.css` (project cards, flat panel, maps, 3D frames, visit form and photo, gallery photos, amenity discs). Things you click as a whole (project cards, gallery photos) also lift and lean toward the mouse (`Tilt` / `useTilt` in `lib.jsx`); maps and 3D views you drag stay level. On touch they rest raised and still. A clip-path cuts off a shadow, so reveal masks are dropped once open.

@@ -531,9 +531,9 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
   .is-muted { color: inherit; }
 }
 
-/* the build-stages section: its heading and the four stage titles in the site's turmeric (the client's choice), taken a few
-   shades deeper on this light background so they pass contrast for large text (3.5:1; the bright turmeric was 1.7:1) */
-#build .head h2, #build .stages__steps h3 { color: #9c6f0c; }
+/* the build-stages section: its heading and the four stage titles in the site's one turmeric, the same yellow as every
+   other section (the client's choice: one yellow everywhere, not a darker shade for contrast) */
+#build .head h2, #build .stages__steps h3 { color: var(--turmeric); }
 
 /* a toggle is only as wide as its options, even inside a stretched panel */
 .seg { justify-self: start; }
