@@ -724,6 +724,8 @@ main > .fhero + :not(.section--surface):not(.section--dark) { background: var(--
 .fhero__svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
 .fhero__letters { font-family: var(--brand); font-weight: 700; font-stretch: 76%; letter-spacing: -0.03em; }
 .fhero__edge { fill: none; stroke: rgb(241 242 236 / .55); stroke-width: 1.25px; }
+.fhero__scrim { position: absolute; left: 0; right: 0; bottom: 0; height: 42%; z-index: 1; pointer-events: none;
+  background: linear-gradient(to top, rgb(15 35 29 / .6) 0%, rgb(15 35 29 / .4) 28%, rgb(15 35 29 / .16) 62%, rgb(15 35 29 / 0) 100%); }
 .fhero__foot { position: absolute; left: 0; right: 0; bottom: clamp(36px, 6vh, 72px); z-index: 2; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px 32px; flex-wrap: wrap; }
 .fhero__title { max-width: 17ch; font-size: clamp(24px, 2.6vw, 42px); line-height: 1.02; color: var(--cream); text-shadow: 0 2px 24px rgb(15 35 29 / .5); }
 .fhero .hero__scroll { bottom: auto; top: 50%; translate: 0 -50%; }

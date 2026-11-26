@@ -163,7 +163,9 @@ const PauseButton = ({ film }) => (
    as a card with the projects sliding over it.
    The letters are real holes (an SVG mask), so the ground stays clean and their edges sharp, and a fine cream outline
    keeps the name readable whatever the film shows inside it; the outline goes as the dive begins. The dive narrows the
-   SVG's viewBox around the l rather than scaling a picture of it, so the edges stay crisp all the way in. ---------- */
+   SVG's viewBox around the l rather than scaling a picture of it, so the edges stay crisp all the way in.
+   The film's brighter grade is baked into the files (shadows and midtones lifted, whites kept), never a CSS filter, so it
+   looks exactly the same inside the letters as on the whole screen and costs the browser nothing. ---------- */
 const clamp01 = v => Math.min(1, Math.max(0, v));
 export function FilmHero({ word, title }) {
   const ready = useReady();
@@ -181,13 +183,10 @@ export function FilmHero({ word, title }) {
   const fade = useTransform(p, [0.58, 0.72], [1, 0]);
   const edge = useTransform(p, [0, 0.14], [1, 0]);
   const cue = useTransform(p, [0, 0.08], [1, 0]);
-  // while the film is only inside the letters it runs brighter, so dark scenes never empty them; it settles to its own
-  // exposure as the dive opens it to the full screen
-  const glow = useTransform(p, [0, 0.62], [0, 1]);
-  const exposure = useTransform(glow, g => `brightness(${(1.45 - 0.45 * g).toFixed(3)}) contrast(${(0.9 + 0.1 * g).toFixed(3)})`);
   const card = useTransform(q, v => { const s = (v * 4).toFixed(2); return `inset(0% ${s}% 0% ${s}% round ${(v * 48).toFixed(1)}px)`; });
   const sink = useTransform(q, [0, 1], ['0%', '42%']);
-  const dim = useTransform(q, [0, 1], [0, 0.55]);
+  // the film keeps its full brightness while it holds the screen, and only dims once the projects have covered a third of it
+  const dim = useTransform(q, [0.35, 1], [0, 0.45]);
   // the camera: depth s around the l's stem
   const aim = s => {
     const g = geo.current, el = svg.current;
@@ -224,8 +223,7 @@ export function FilmHero({ word, title }) {
   return (
     <section className={`fhero${reduce ? ' is-still' : ''}`} ref={track} aria-labelledby="hero-h">
       <motion.div className="fhero__stage" ref={stage} style={reduce ? undefined : { clipPath: card, y: sink }}>
-        <motion.video ref={video} className="fhero__film" muted loop playsInline preload="none" poster={film.poster} aria-hidden="true"
-          style={{ filter: exposure }} />
+        <video ref={video} className="fhero__film" muted loop playsInline preload="none" poster={film.poster} aria-hidden="true" />
         <motion.svg ref={svg} className="fhero__svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice" style={reduce ? undefined : { opacity: fade }}>
           <defs>
             <mask id="fhero-cut">
@@ -256,6 +254,9 @@ export function FilmHero({ word, title }) {
           )}
           <text ref={probe} className="fhero__letters" x="0" y="-2000" visibility="hidden" />
         </motion.svg>
+        {/* a still shade under the headline: lost in the green ground at first, it keeps the headline readable over the
+            bright aerial once the film fills the screen */}
+        <i className="fhero__scrim" aria-hidden="true" />
         {!reduce && <motion.i className="hero__dim" aria-hidden="true" style={{ opacity: dim }} />}
         <PauseButton film={film} />
         <motion.div className="wrap fhero__foot" initial={{ opacity: 0, y: 20 }} animate={{ opacity: ready ? 1 : 0, y: ready ? 0 : 20 }} transition={{ duration: 0.9, ease: EASE, delay: 1.1 }}>
