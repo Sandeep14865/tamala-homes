@@ -1,21 +1,22 @@
 // Shared pieces of the site: intro, cursor, nav, hero, 3D frame, visit form, footer.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, useMotionValueEvent, useReducedMotion, useInView, animate } from 'framer-motion';
 import { Spot } from './Orb.jsx';
 import { Link, BASE, Words, Rise, Picture, Magnetic, Arrow, EASE, SPRING, tick, useReady, useMedia, srcSet, useFocusTrap } from './lib.jsx';
 import { CONTACT } from './data.js';
 import { PAGES, ORDER, HOURS } from './content.js';
 import { webglOK } from './three/gl.js';
-import { Chapter, Dome } from './fx.jsx';
+import { Chapter, Dome, LEAF_D, APERTURE } from './fx.jsx';
 
 const wa = (msg) => `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(msg)}`;
 const gmaps = (q) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
 
-/* ---------- intro: the name draws in over a counter, then the curtain lifts ---------- */
+/* ---------- intro: a turmeric leaf draws itself while the count runs; then the leaf becomes a window and opens ---------- */
+const SHUT = '0vmin 0vmin, 100% 100%', LEAF_START = '11vmin 11vmin, 100% 100%', OPEN = '640vmin 640vmin, 100% 100%';
 export function Preloader({ onDone }) {
   const [n, setN] = useState(0);
   useEffect(() => {
-    const c = animate(0, 100, { duration: 1.5, ease: [0.6, 0, 0.2, 1], onUpdate: v => setN(Math.round(v)), onComplete: onDone });
+    const c = animate(0, 100, { duration: 1.6, ease: [0.6, 0, 0.2, 1], onUpdate: v => setN(Math.round(v)), onComplete: onDone });
     const t = setTimeout(onDone, 3200);          // a throttled tab never holds the page behind the intro
     // never lock input behind an animation: any press, key or scroll skips the intro
     const skip = () => onDone();
@@ -24,19 +25,16 @@ export function Preloader({ onDone }) {
     return () => { c.stop(); clearTimeout(t); evs.forEach(n => removeEventListener(n, skip)); };
   }, [onDone]);
   return (
-    // it lifts off with its foot curving up, the same arc the dark sections rise in on
     <motion.div className="intro" aria-hidden="true"
-      initial={{ borderBottomLeftRadius: '50% 0vh', borderBottomRightRadius: '50% 0vh' }}
-      exit={{ y: '-100%', borderBottomLeftRadius: '50% 26vh', borderBottomRightRadius: '50% 26vh' }}
-      transition={{ type: 'spring', bounce: 0, duration: 0.9 }}>
-      <div className="intro__name">
-        {'Tamala Homes'.split('').map((ch, i) => (
-          <span className="w" key={i}><motion.span className="w__in" initial={{ y: '110%' }} animate={{ y: '0%' }}
-            transition={{ duration: 0.8, ease: EASE, delay: 0.05 * i }}>{ch === ' ' ? ' ' : ch}</motion.span></span>
-        ))}
-      </div>
-      <div className="intro__foot"><span>Guntur</span><span className="num">{String(n).padStart(3, '0')}</span></div>
-      <motion.div className="intro__bar" style={{ scaleX: n / 100 }} />
+      style={{ WebkitMaskImage: APERTURE, maskImage: APERTURE, WebkitMaskSize: SHUT, maskSize: SHUT }}
+      exit={{ WebkitMaskSize: [LEAF_START, OPEN], maskSize: [LEAF_START, OPEN] }}
+      transition={{ duration: 1.35, ease: [0.76, 0, 0.24, 1] }}>
+      <p className="intro__mark">Tamala Homes</p>
+      <svg className="intro__leaf" viewBox="0 0 24 24">
+        <motion.path d={LEAF_D} initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} style={{ fillOpacity: n / 100 }}
+          transition={{ duration: 1.3, ease: EASE }} />
+      </svg>
+      <div className="intro__foot"><span className="intro__count num">{String(n).padStart(3, '0')}</span><span>Guntur, Andhra Pradesh</span></div>
     </motion.div>
   );
 }
@@ -127,6 +125,111 @@ export function Nav({ links, solidAlways }) {
 /* ---------- the glass button: clear over a picture, fills blue under the pointer ---------- */
 export function GlassCta({ href = '#visit', children = 'Book a site visit' }) {
   return <Magnetic><a className="btn btn--glass" href={href}>{children}<Arrow /></a></Magnetic>;
+}
+
+/* ---------- the hero film: loads after the first paint, never for visitors who asked for less motion or less data, nor
+   on a slow connection (3G or worse): there the still poster stays, and the play button loads the film on request ---------- */
+function useFilm(video) {
+  const ready = useReady(), reduce = useReducedMotion(), phone = useMedia('(max-width: 1023px)');
+  const [playing, setPlaying] = useState(false);
+  const src = phone ? BASE + '/media/hero-720p.mp4' : BASE + '/media/hero-1600.mp4';
+  useEffect(() => {
+    const v = video.current;
+    if (!v || !ready) return;
+    const c = navigator.connection;
+    const slow = c && (c.saveData || /(^|-)(2g|3g)$/.test(c.effectiveType || ''));
+    if (reduce || slow) return;
+    v.src = src;
+    v.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+    const io = new IntersectionObserver(([e]) => { if (!v.dataset.paused) e.isIntersecting ? v.play().catch(() => {}) : v.pause(); }, { threshold: 0.05 });
+    io.observe(v);
+    return () => io.disconnect();
+  }, [ready, reduce, src, video]);
+  const toggle = () => {
+    const v = video.current;
+    if (!v.src) v.src = src;
+    if (v.paused) { delete v.dataset.paused; v.play().then(() => setPlaying(true)).catch(() => {}); } else { v.dataset.paused = '1'; v.pause(); setPlaying(false); }
+  };
+  return { playing, toggle, poster: phone ? BASE + '/media/hero-poster-720p.webp' : BASE + '/media/hero-poster-1600.webp' };
+}
+const PauseButton = ({ film }) => (
+  <button className="hero__pause" type="button" onClick={film.toggle} aria-label={film.playing ? 'Pause the film' : 'Play the film'} data-cursor={film.playing ? 'Pause' : 'Play'}>
+    {film.playing ? <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 2h3v10H3zM8 2h3v10H8z" /></svg> : <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 2v10l8-5z" /></svg>}
+  </button>
+);
+
+/* ---------- the home hero: the aerial film plays inside the letters of the name, on the dark ground. Scrolling dives
+   through the l of Tamala until the film fills the screen; it holds there with the headline, then leaves as a card
+   with the projects sliding over it ---------- */
+export function FilmHero({ word, title }) {
+  const ready = useReady();
+  const reduce = useReducedMotion();
+  const phone = useMedia('(max-width: 899px)');
+  const track = useRef(null), video = useRef(null), type = useRef(null), anchor = useRef(null);
+  const film = useFilm(video);
+  const [origin, setOrigin] = useState('50% 50%');
+  const max = useRef(60);
+  const { scrollYProgress: p } = useScroll({ target: track, offset: ['start start', 'end end'] });
+  const { scrollYProgress: q } = useScroll({ target: track, offset: ['end end', 'end start'] });
+  // an even zoom (each step of scroll multiplies the scale by the same amount) through the first part of the hold
+  const zoom = useTransform(p, v => Math.pow(max.current, Math.min(1, Math.max(0, v / 0.7))));
+  const typeFade = useTransform(p, [0.58, 0.72], [1, 0]);
+  const cue = useTransform(p, [0, 0.08], [1, 0]);
+  // while the film is only inside the letters it runs brighter, so dark scenes never empty the letters (and its shadows
+  // stay lighter than the ground around them); it settles to its own exposure as the dive opens it to the full screen
+  const glow = useTransform(p, [0, 0.62], [0, 1]);
+  const exposure = useTransform(glow, g => `brightness(${(1.55 - 0.55 * g).toFixed(3)}) contrast(${(0.86 + 0.14 * g).toFixed(3)}) saturate(${(1.08 - 0.08 * g).toFixed(3)})`);
+  const card = useTransform(q, v => { const s = (v * 4).toFixed(2); return `inset(0% ${s}% 0% ${s}% round ${(v * 48).toFixed(1)}px)`; });
+  const sink = useTransform(q, [0, 1], ['0%', '42%']);
+  const dim = useTransform(q, [0, 1], [0, 0.55]);
+  // the dive aims at the middle of the l's stem; how far to zoom depends on how thick the stem is on this screen
+  useLayoutEffect(() => {
+    const measure = () => {
+      const t = type.current, a = anchor.current;
+      if (!t || !a) return;
+      let x = 0, y = 0, el = a;
+      while (el && el !== t) { x += el.offsetLeft; y += el.offsetTop; el = el.offsetParent; }
+      setOrigin(`${(x + a.offsetWidth / 2).toFixed(1)}px ${(y + a.offsetHeight * 0.5).toFixed(1)}px`);
+      const fs = parseFloat(getComputedStyle(a).fontSize) || 200;
+      max.current = Math.max(24, (Math.hypot(innerWidth, innerHeight) * 1.1) / (fs * 0.1));
+    };
+    measure(); document.fonts?.ready.then(measure);
+    addEventListener('resize', measure);
+    return () => removeEventListener('resize', measure);
+  }, [phone]);
+  const lines = word.split(' ');
+  let k = 0;
+  return (
+    <section className={`fhero${reduce ? ' is-still' : ''}`} ref={track} aria-labelledby="hero-h">
+      <motion.div className="fhero__stage" style={reduce ? undefined : { clipPath: card, y: sink }}>
+        <motion.video ref={video} className="fhero__film" muted loop playsInline preload="none" poster={film.poster} aria-hidden="true"
+          style={{ filter: exposure }} />
+        <motion.div className="fhero__type" ref={type} aria-hidden="true" style={reduce ? undefined : { scale: zoom, opacity: typeFade, transformOrigin: origin }}>
+          <p className="fhero__word">
+            {lines.map((w, li) => (
+              <span className="fhero__line" key={li}>
+                {w.split('').map((ch, i) => {
+                  const d = 0.2 + 0.045 * k++;
+                  return (
+                    <span className="w" key={i} ref={li === 0 && i === w.indexOf('l') ? anchor : undefined}>
+                      <motion.span className="w__in" initial={{ y: '108%' }} animate={{ y: ready ? '0%' : '108%' }} transition={{ duration: 1.25, ease: EASE, delay: d }}>{ch}</motion.span>
+                    </span>
+                  );
+                })}
+              </span>
+            ))}
+          </p>
+        </motion.div>
+        {!reduce && <motion.i className="hero__dim" aria-hidden="true" style={{ opacity: dim }} />}
+        <PauseButton film={film} />
+        <motion.div className="wrap fhero__foot" initial={{ opacity: 0, y: 20 }} animate={{ opacity: ready ? 1 : 0, y: ready ? 0 : 20 }} transition={{ duration: 0.9, ease: EASE, delay: 1.1 }}>
+          <h1 className="fhero__title" id="hero-h">{title}</h1>
+          <GlassCta />
+        </motion.div>
+        <motion.span className="hero__scroll" aria-hidden="true" style={{ opacity: cue }}><i />Scroll</motion.span>
+      </motion.div>
+    </section>
+  );
 }
 
 /* ---------- hero: film or photograph over the whole first screen, the name set across its foot ---------- */
@@ -270,6 +373,11 @@ export function Visit({ project, heading, lead, photo, spot, chapter }) {
     </div>
   );
   const brochure = project ? Object.values(PAGES).find(p => p.short === project).key : 'tamala-homes';
+  const days = useMemo(() => Array.from({ length: 12 }, (_, i) => {
+    const x = new Date(); x.setHours(12, 0, 0, 0); x.setDate(x.getDate() + i);
+    const iso = `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+    return { iso, week: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : x.toLocaleDateString('en-IN', { weekday: 'short' }), day: x.getDate(), month: x.toLocaleDateString('en-IN', { month: 'short' }) };
+  }), []);
   return (
     <section className="section section--surface" id="visit" aria-labelledby="visit-h">
       <div className={spot ? 'wrap has-spot' : 'wrap'}>{spot && <Spot shape={spot} />}
@@ -284,7 +392,20 @@ export function Visit({ project, heading, lead, photo, spot, chapter }) {
                 <select id="f-project" name="project" value={v.project} onChange={set('project')}>{ORDER.map(k => <option key={k}>{PAGES[k].short}</option>)}</select>
               </div>
             )}
-            {field('date', 'Day of the visit', { type: 'date' })}
+            {/* the next twelve days as a row of choices (real radio buttons: arrow keys move between them) */}
+            <fieldset className={`field field--days${err.date ? ' has-error' : ''}`}>
+              <legend>Day of the visit</legend>
+              <div className="days">
+                {days.map(d => (
+                  <label key={d.iso} className={`day${v.date === d.iso ? ' is-on' : ''}`}>
+                    <input type="radio" name="date" value={d.iso} checked={v.date === d.iso} onChange={set('date')}
+                      aria-describedby={err.date ? 'f-date-err' : undefined} />
+                    <span className="day__w">{d.week}</span><span className="day__d">{d.day}</span><span className="day__m">{d.month}</span>
+                  </label>
+                ))}
+              </div>
+              <AnimatePresence>{err.date && <motion.p className="field__error" id="f-date-err" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>{err.date}</motion.p>}</AnimatePresence>
+            </fieldset>
             <div className="form__foot">
               <Magnetic pull={0.18}><button className="btn btn--solid btn--lg" type="submit">Book a site visit<Arrow /></button></Magnetic>
               <p className="form__note" role="status">{sent ? 'WhatsApp opens with your request filled in. Send it and we call you within a day.' : 'Opens WhatsApp with your request filled in. We call you within a day to fix the time.'}</p>
@@ -321,7 +442,7 @@ export function Footer({ under = 'var(--surface)' }) {
       <div className="wrap">
         <div className="foot__top">
           <div>
-            <Words as="h2" text="See a flat before you decide" />
+            <Words as="h2" text="See a flat *before* you decide" />
             <Rise as="p" delay={0.2}>We drive you to the site, walk you through a finished flat and show you the papers.</Rise>
           </div>
           <Rise delay={0.3}><GlassCta /></Rise>

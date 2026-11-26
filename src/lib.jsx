@@ -1,5 +1,6 @@
 // Small shared pieces: a history router, and the motion helpers every page uses.
 import { Fragment, forwardRef, useSyncExternalStore, useRef, useEffect, useState, createContext, useContext } from 'react';
+import { scrollToY } from './smooth.js';
 import { motion, useInView, useMotionValue, useSpring, useScroll, useTransform, useReducedMotion, useMotionTemplate, animate } from 'framer-motion';
 
 export const EASE = [0.2, 0.7, 0.2, 1];
@@ -37,7 +38,7 @@ export function navigate(to) {
   const [p, h] = to.split('#');
   // the same page without a section (the logo after a #map link, say): go to the top and drop the section from the address
   if (!h && strip(full(p || '/')) === clean()) {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToY(0);
     if (location.hash) history.replaceState(history.state, '', full(p || '/'));
     return;
   }
@@ -65,16 +66,18 @@ export const Ready = createContext(true);
 export const useReady = () => useContext(Ready);
 
 /* ---------- words that rise out of a mask, one after another, once ---------- */
+// a word or phrase wrapped in *asterisks* is set in italic: 'Where we build in *Guntur*'
+const emParts = text => text.split(/(\*[^*]+\*)/).filter(Boolean).map(t => (t.startsWith('*') ? { t: t.slice(1, -1), em: true } : { t: t.trim() })).filter(p => p.t);
 export function Words({ as: Tag = 'h2', parts, text, className, delay = 0, step = 0.045, show, id }) {
   const ref = useRef(null);
   const seen = useInView(ref, { once: true, margin: '0px 0px -12% 0px' });
   const on = show === undefined ? seen : show;
-  const list = parts || [{ t: text }];
+  const list = (parts || [{ t: text }]).flatMap(p => (p.t.includes('*') ? emParts(p.t).map(q => ({ ...p, ...q, em: q.em || p.em })) : [p]));
   let i = 0;
   return (
     <Tag ref={ref} id={id} className={className} aria-label={list.map(p => p.t).join(' ')}>
       {list.map((p, pi) => (
-        <span key={pi} className={p.muted ? 'is-muted' : undefined} aria-hidden="true">
+        <span key={pi} className={[p.muted && 'is-muted', p.em && 'is-em'].filter(Boolean).join(' ') || undefined} aria-hidden="true">
           {p.t.split(' ').map((w, wi) => {
             const d = delay + step * i++;
             return (

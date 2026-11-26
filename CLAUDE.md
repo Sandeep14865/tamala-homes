@@ -7,7 +7,7 @@ A website for a fictional apartment builder in Guntur, Andhra Pradesh: three pro
 
 ## Stack and layout
 
-React 18 single-page app built with Vite 6 (plain JSX, no TypeScript), Framer Motion for animation, three.js for the 3D tower and floor plans.
+React 18 single-page app built with Vite 6 (plain JSX, no TypeScript), Framer Motion for animation, Lenis for smooth wheel scrolling, three.js for the 3D tower and floor plans.
 
 | File | What it holds |
 |---|---|
@@ -17,7 +17,8 @@ React 18 single-page app built with Vite 6 (plain JSX, no TypeScript), Framer Mo
 | `src/Home.jsx` | Home sections: projects, map, promise, build stages, amenities, visit |
 | `src/Project.jsx` | Project pages |
 | `src/Orb.jsx` | The travelling turmeric shape on the home page |
-| `src/fx.jsx` | Signature moments: `Dome`, `Leaf`, `Marquee`, `Giant`, `Chapter` |
+| `src/fx.jsx` | Signature moments: `Dome`, `Leaf`, `Marquee`, `Giant`, `Chapter`; the leaf masks |
+| `src/smooth.js` | Smooth wheel scrolling (Lenis) and the site's own scroll helpers |
 | `src/Legal.jsx` | Privacy, terms, credits |
 | `src/content.js`, `src/data.js` | Page copy; flats, plans, map, contacts |
 | `src/three/*` | Imperative three.js scenes, each with `dispose()` |
@@ -42,32 +43,25 @@ Routes: `/`, `/projects/<key>`, `/privacy`, `/terms`, `/credits`.
 - **Each page has its own title and link preview.** `scripts/spa-pages.mjs` writes them into every route's HTML at build time with absolute addresses (`SITE_URL`, default the Pages address). A new route goes in its list, with a 1200×630 share picture in `public/`.
 - **Mobile is a first-class target.** Check every change at 390px wide as well as on desktop.
 
-## Look (the client's choices: keep them)
+## Look (second revamp, Nov 26, 2026; the client gave free rein, so these are the current choices, not fixed rules)
 
-- **Colours:** limewash `#f1f2ec` (background), tamala green `#0f231d` (ink and dark sections), action blue `#295290`, muted `#6f7f77`, turmeric `#e0a526`.
-- **Type:** Anek Latin, condensed (`font-stretch: 76%`) for display text.
-- **Hero:** full-screen film or photo, the giant name and one glass button. Nothing else. As the page moves on it draws in to a round-cornered card, sinks and dims while the next section slides over it (sections after it stand above it by page order only: no z-index, or the photo viewer ends up under the nav).
-- **Nav:** a full-width bar over the hero; past it, the bar draws in to a floating glass capsule.
-- **One yellow:** turmeric `#e0a526` (`--turmeric`) is the only yellow on the site, in every section. Don't add darker or lighter shades of it, even for contrast (the client's choice).
+- **Colours:** limewash `#f1f2ec` (background), tamala green `#0f231d` (ink, dark sections, buttons), leaf green `#2f6b52` (hover and selected text, focus ring on light), turmeric `#e0a526` (the one yellow: accents, the travelling shape, button hover sweep, focus ring on dark). The old action blue is retired; don't bring it back unless asked.
+- **Type:** Instrument Serif for headings, names and big numbers, with italic accents written as `*word*` in heading text (`Words` turns them italic). Anek Latin for body and UI. The brand name itself ("Tamala Homes": nav, home hero, footer) is the heavy condensed Anek wordmark. `font-synthesis: none`, so the single-weight serif is never faked bold.
+- **Home hero (`FilmHero`):** the aerial film plays inside the letters of the wordmark on the dark ground (`mix-blend-mode: darken`); scrolling dives through the l of Tamala until the film fills the screen, then it leaves as a card under the projects. The film runs brighter while it is only inside the letters. Project pages keep the photo hero (`Hero`) with the name in serif.
+- **The leaf is the window:** the intro draws a turmeric leaf while it counts, then the leaf opens as a window onto the page; between pages a green leaf grows to close the old page and the new one opens through a leaf (`APERTURE` / `LEAF` masks in `fx.jsx`). Plain fades with less motion.
+- **Smooth scrolling (`src/smooth.js`, Lenis):** mouse and trackpad only, off for touch and for less motion; paused while the menu or the photo viewer is open. Every scroll the site makes goes through `scrollToY` / `scrollToEl`.
+- **Film grain:** a fine animated grain over everything (`.grain`), still on touch and with less motion, gone with more contrast.
+- **Map:** the Google embed, toned toward the palette (desaturated, warm) and in full colour on hover.
+- **Visit form:** the day is chosen from the next twelve days as a row of real radio buttons (arrow keys move), not a date box.
 - **Build stages:** the heading and the four stage titles are turmeric; photos change with a wipe, never a blend.
-- **Contrast:** text must pass WCAG AA (muted grey is `#56665e` for that reason). Check new colour pairs before using them. The one exception is turmeric text on the light background, kept by the client's choice.
+- **Contrast:** text must pass WCAG AA (muted grey is `#56665e`). The one exception is turmeric text on the light background, the client's choice.
 - **Enquiries go through WhatsApp:** the visit form and the "Ask about this flat" button open a pre-filled WhatsApp message; email is only a fallback link.
-- **Floor plans add up:** carpet area is worked out from the drawn rooms and shown next to the balcony and the super built-up figure. If you change a plan, the drawn rooms must stay below the super built-up area.
-- **Raised sheets:** cards and panels float a layer above the page, sharing `--sheet`, `--lift` and `--edge` in `styles.css` (project cards, flat panel, maps, 3D frames, visit form and photo, gallery photos, amenity discs). Things you click as a whole (project cards, gallery photos) also lift and lean toward the mouse (`Tilt` / `useTilt` in `lib.jsx`); maps and 3D views you drag stay level. On touch they rest raised and still. A clip-path cuts off a shadow, so reveal masks are dropped once open.
-- **Signature moments (`src/fx.jsx`)**, each resting fully shown under reduced motion:
-  - every section heading carries a chapter line (`Head chapter={[n, 'Name']}`): number, a turmeric rule that draws in, name
-  - dark sections after light ones (the promise, the footer, other projects) rise in on a curved edge (`Dome`, `under` = the colour above)
-  - the promise photo opens out of the Tamala leaf to full screen (`Leaf`)
-  - one giant word fills the width between the gutters, measured to fit (`Giant`): "Guntur" closing the map, the project's name closing its location section
-  - a band of giant words drifts with the scroll (`Marquee`): amenities on the home page, the project's facts on its page
-  - the footer ends on the name set across towers at dusk; the intro lifts off with a curved foot
-  - the projects run shows each card's number and a live count beside its progress line
-- **Tower view:** only the selected flat is coloured.
-- **Map section:** a Google Maps embed with project tabs and drive-time rows that draw the route (keyless embed URLs).
+- **Floor plans add up:** carpet area is worked out from the drawn rooms and shown next to the balcony and the super built-up figure. Wall tops are drawn dark, like a plan.
+- **Raised sheets:** cards and panels float above the page, sharing `--sheet`, `--lift` and `--edge`. Things you click as a whole (project cards, gallery photos) lean toward the mouse (`Tilt` / `useTilt`); maps and 3D views you drag stay level.
+- **Signature moments (`src/fx.jsx`):** chapter lines on every heading (`Head chapter={[n, 'Name']}`), dark sections rising on a curved edge (`Dome`), the promise photo opening out of the leaf (`Leaf`), one giant italic word measured to the width (`Giant`), marquee bands alternating serif italic and condensed caps (`Marquee`), the footer name over towers at dusk.
+- **Nav:** a full-width bar over the hero; past it, a floating glass capsule.
 - **Amenities:** round photos that roll in; a swipe row on phones.
-- **Travelling shape (`Orb.jsx`):** one turmeric shape follows the home page, resting at `<Spot shape="..."/>` markers (pin, ring, brick, sun, target). It sits on the page, not the screen: absolute position in page coordinates, so it scrolls natively while it rests. It holds still at full size for the first and last fifth of each gap and glides through the middle, with sine easing and a short follow. All shapes rest at one size (136px desktop, 68px phone).
-  - Desktop: the section name curves round inside the shape in pure black.
-  - Phone: a one-word cream tag (MAP, PROMISE, BUILD, AMENITIES, VISIT) slides out beside it.
+- **Travelling shape (`Orb.jsx`):** one turmeric shape follows the home page, resting at `<Spot shape="..."/>` markers. It sits on the page (absolute, page coordinates), holds still at full size for the first and last fifth of each gap and glides through the middle. All shapes rest at one size (136px desktop, 68px phone). Desktop: the section name curves round inside the shape in pure black. Phone: a one-word cream tag slides out beside it.
 
 ## How to check a change
 

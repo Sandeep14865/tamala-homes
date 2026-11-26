@@ -13,7 +13,7 @@ export function mountPlan(frame) {
   base.rotation.x = -Math.PI / 2; base.position.y = -0.05; scene.add(base);
 
   const wallMat = new THREE.MeshLambertMaterial({ color: 0xfaf7f0 });
-  const capMat = new THREE.MeshLambertMaterial({ color: 0x4a82d6 });
+  const capMat = new THREE.MeshLambertMaterial({ color: 0x0f231d });   // wall tops drawn dark, like the lines of a plan
   const furnMat = new THREE.MeshLambertMaterial({ color: 0xbcae92 });
   const softMat = new THREE.MeshLambertMaterial({ color: 0xf4efe4 });
   let group = null, floors = new Map(), current = null, hl = null;

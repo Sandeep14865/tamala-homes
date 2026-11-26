@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useInView, useReducedMotion, useMotionValueEvent, LayoutGroup } from 'framer-motion';
 import { Link, BASE, Words, Rise, Picture, Counter, Arrow, Tilt, EASE, SPRING, useMedia, srcSet, useNear } from './lib.jsx';
-import { Nav, Hero, Head, Visit, Footer, gmaps } from './components.jsx';
+import { Nav, FilmHero, Head, Visit, Footer, gmaps } from './components.jsx';
 import { PROJECTS, MAP } from './data.js';
 import { PAGES, ORDER, STAGES, AMENITIES } from './content.js';
 import { Orb, Spot } from './Orb.jsx';
 import { Dome, Leaf, Marquee, Giant, Chapter } from './fx.jsx';
+import { scrollToY } from './smooth.js';
 
 const LINKS = [['Projects', '#projects'], ['Locations', '#map'], ['Building', '#build'], ['Amenities', '#amenities']];
 const TOWERS = Object.values(PROJECTS).reduce((a, p) => a + p.towers.length, 0);
@@ -42,7 +43,7 @@ function Projects() {
     // a moment later, so the browser's own scroll-into-view on focus has run and doesn't cancel this one
     setTimeout(() => {
       const top = sec.getBoundingClientRect().top + scrollY;
-      window.scrollTo({ top: top + p * (sec.offsetHeight - innerHeight), behavior: reduce ? 'auto' : 'smooth' });
+      scrollToY(top + p * (sec.offsetHeight - innerHeight), { immediate: !!reduce });
     }, 0);
   };
   return (
@@ -53,7 +54,7 @@ function Projects() {
           <div className="projects__intro">
             <div>
             <Chapter n={1}>Projects</Chapter>
-            <Words as="h2" id="projects-h" parts={[{ t: 'Three projects in Guntur.' }, { t: 'One ready, one rising, one about to open.', muted: true }]} />
+            <Words as="h2" id="projects-h" parts={[{ t: 'Three projects in *Guntur.*' }, { t: 'One ready, one rising, one about to open.', muted: true }]} />
             </div>
             <dl className="stats">
               <Rise delay={0.1}><dd><Counter to={3} /></dd><dt>Projects</dt></Rise>
@@ -113,7 +114,7 @@ function MapSection() {
   return (
     <section className="section section--surface" id="map" aria-labelledby="map-h">
       <div className="wrap has-spot"><Spot shape="pin" />
-        <Head id="map-h" chapter={[2, 'Locations']} text="Where we build in Guntur" lead="Choose a project, then a place you drive to every week to see the way there." />
+        <Head id="map-h" chapter={[2, 'Locations']} text="Where we build in *Guntur*" lead="Choose a project, then a place you drive to every week to see the way there." />
         <div className="split split--viz split--map">
           <div className="panel">
             <p className="map__from">Drive times from <AnimatePresence mode="popLayout" initial={false}>
@@ -232,7 +233,7 @@ function Stages() {
   return (
     <section className="section section--surface" id="build" aria-labelledby="build-h">
       <div className="wrap has-spot"><Spot shape="brick" />
-        <Head id="build-h" chapter={[4, 'Building']} text="Four stages from booking to keys" />
+        <Head id="build-h" chapter={[4, 'Building']} text="Four stages from *booking* to *keys*" />
         <div className="stages">
           <div className="stages__sticky">
             <div className="stages__count num" aria-hidden="true">
@@ -271,7 +272,7 @@ function Amenities() {
   return (
     <section className="section amenities" id="amenities" aria-labelledby="amenities-h">
       <div className="wrap has-spot"><Spot shape="sun" />
-        <Head id="amenities-h" chapter={[5, 'Amenities']} text="Pools, clubhouse and play areas" lead="Shared spaces on the ground and the terrace, kept by our own maintenance team for the first two years." />
+        <Head id="amenities-h" chapter={[5, 'Amenities']} text="Pools, clubhouse and *play areas*" lead="Shared spaces on the ground and the terrace, kept by our own maintenance team for the first two years." />
         <motion.ul className="roll" initial="away" whileInView="here" viewport={{ once: true, margin: '0px 0px -20% 0px' }}>
           {AMENITIES.map((m, i) => (
             <li key={m[0]} className="roll__item">
@@ -301,14 +302,14 @@ export default function Home() {
       <Nav links={LINKS} />
       <Orb />
       <main id="main">
-        <Hero film word="Tamala Homes" title="2 and 3 BHK apartments in Guntur" />
+        <FilmHero word="Tamala Homes" title="2 and 3 BHK apartments in Guntur" />
         <Projects />
         <MapSection />
         <Promise_ />
         <Stages />
         <Marquee words={['Lap pool', 'Clubhouse', 'Garden pavilion', 'Play area', 'Terrace garden', 'Gym']} />
         <Amenities />
-        <Visit spot="target" chapter={[6, 'Visit']} heading="Site visits, seven days a week" lead="Tell us the project and a day. We call to confirm a time and send a car from the office in Brodipet."
+        <Visit spot="target" chapter={[6, 'Visit']} heading="Site visits, *seven days* a week" lead="Tell us the project and a day. We call to confirm a time and send a car from the office in Brodipet."
           photo={['city-view.webp', 'A bright flat with a breakfast counter and a window onto apartment towers']} />
       </main>
       <Footer />

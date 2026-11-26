@@ -32,7 +32,10 @@ export function Dome({ under = 'var(--bg)', depth = 16, children }) {
 
 /* ---------- Leaf ---------- */
 // the logo's leaf as a mask; it grows from a small leaf in the middle of the screen to far past its edges
-const LEAF = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 21C3 10 10 3 21 3c0 11-7 18-18 18z"/></svg>')}")`;
+export const LEAF_D = 'M3 21C3 10 10 3 21 3c0 11-7 18-18 18z';
+export const LEAF = `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="${LEAF_D}"/></svg>`)}")`;
+// the page with a leaf-shaped hole in it: grow the leaf and the page opens like a window
+export const APERTURE = `${LEAF}, linear-gradient(#000 0 0)`;
 export function Leaf({ src, alt, pos = '50% 50%' }) {
   const ref = useRef(null);
   const reduce = useReducedMotion();
