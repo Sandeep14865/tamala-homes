@@ -102,12 +102,20 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
 
 /* ---------- nav ---------- */
 .nav { position: fixed; left: 0; right: 0; top: 0; z-index: 60; color: var(--cream); transition: background-color .4s, color .4s, box-shadow .4s; }
-.nav.is-solid { background: rgb(241 242 236 / .72); color: var(--ink); -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%); }
-/* a soft edge where content passes under the bar, in place of a hard rule */
-.nav.is-solid::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 18px; pointer-events: none; background: linear-gradient(to bottom, rgb(15 35 29 / .08), rgb(15 35 29 / 0)); }
-.nav.is-open::after { display: none; }
-.nav.is-open { background: transparent; color: var(--cream); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
-.nav__bar { display: flex; align-items: center; gap: 36px; height: var(--nav); }
+/* past the hero the full-width bar draws in to a floating glass capsule, centred, with the page passing under it */
+.nav.is-solid { color: var(--ink); }
+.nav.is-open { color: var(--cream); }
+.nav__bar {
+  display: flex; align-items: center; gap: 36px; height: var(--nav); max-width: var(--max); border-radius: 0;
+  transition: max-width .7s var(--ease), height .5s var(--ease), margin-top .5s var(--ease), padding .5s var(--ease), border-radius .5s var(--ease), background-color .4s, box-shadow .5s;
+}
+.nav.is-solid:not(.is-open) .nav__bar {
+  max-width: 960px; height: 62px; margin-top: 12px; padding: 0 8px 0 24px; gap: 28px; border-radius: 999px;
+  background: rgb(241 242 236 / .74); -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%);
+  box-shadow: 0 1px 1px rgb(15 35 29 / .05), 0 10px 30px -10px rgb(15 35 29 / .25), inset 0 1px 0 rgb(255 255 255 / .8), inset 0 0 0 1px rgb(15 35 29 / .06);
+}
+.nav.is-solid:not(.is-open) .nav__links { gap: 24px; }
+.nav.is-solid:not(.is-open) .nav__cta { min-height: 46px; border-radius: 999px; }
 .nav__logo { display: inline-flex; align-items: center; gap: 10px; margin-right: auto; font: 600 25px/1 var(--display); font-stretch: 76%; letter-spacing: -0.01em; }
 .nav__logo svg { width: 22px; height: 22px; fill: var(--turmeric); transition: rotate .5s var(--ease), scale .5s var(--ease); }
 .nav.is-solid:not(.is-open) .nav__logo svg { fill: var(--accent); }
@@ -435,7 +443,12 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
 .foot__legal { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 32px; padding: 22px 0; border-top: 1px solid var(--line); font-size: 0.875rem; color: var(--muted); }
 .foot__legal span:last-child { display: flex; flex-wrap: wrap; gap: 8px 24px; }
 .foot__legal a:hover { color: var(--cream); text-decoration: underline; text-underline-offset: 4px; }
-.foot__word { margin: 24px 0 -0.13em; padding-left: var(--gut); white-space: nowrap; pointer-events: none; font: 620 calc((100vw - 2 * var(--gut)) / 4.2)/.78 var(--display); font-stretch: 76%; letter-spacing: -0.03em; color: rgb(241 242 236 / .07); }
+/* the name across a photograph of towers at dusk, the photograph sinking a little slower than the page */
+.foot__stage { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; min-height: clamp(440px, 82vh, 880px); }
+.foot__photo { position: absolute; left: 0; top: -14%; z-index: -2; width: 100%; height: 114%; object-fit: cover; object-position: 50% 60%; }
+.foot__stage::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to bottom, var(--dark) 0%, rgb(15 35 29 / .5) 26%, rgb(15 35 29 / .12) 55%, rgb(15 35 29 / .78) 100%); }
+.foot__word { margin: 0; padding-inline: var(--gut); white-space: nowrap; pointer-events: none; font: 640 calc((100vw - 2 * var(--gut)) / 4.3)/.8 var(--display); font-stretch: 76%; letter-spacing: -0.035em; color: var(--cream); text-shadow: 0 10px 60px rgb(15 35 29 / .45); }
+.foot__stage .foot__legal { margin-top: clamp(14px, 2vw, 26px); border-top-color: rgb(241 242 236 / .24); color: rgb(241 242 236 / .82); }
 
 /* ---------- legal pages ---------- */
 .doc { padding: calc(var(--nav) + clamp(56px, 8vw, 120px)) 0 var(--pad); min-height: 80vh; }
@@ -517,15 +530,15 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
 
 /* visitors who ask for less transparency or more contrast get solid surfaces */
 @media (prefers-reduced-transparency: reduce) {
-  .nav.is-solid, .lightbox__bar, .viz__turn button, .hero__pause { -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .nav.is-solid { background: var(--bg); box-shadow: 0 1px 0 var(--line); }
+  .nav.is-solid .nav__bar, .lightbox__bar, .viz__turn button, .hero__pause { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  .nav.is-solid:not(.is-open) .nav__bar { background: var(--bg); }
   .btn--glass { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgb(15 35 29 / .82); }
   .lightbox__bar, .viz__turn button, .hero__pause { background: var(--dark); }
   .lightbox__scrim { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--dark); }
 }
 @media (prefers-contrast: more) {
   :root { --muted: #4e5f57; --line: rgb(15 35 29 / .5); }
-  .nav.is-solid { background: var(--bg); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 2px 0 var(--ink); }
+  .nav.is-solid:not(.is-open) .nav__bar { background: var(--bg); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 0 0 2px var(--ink); }
   .btn--glass { background: var(--dark); border: 2px solid #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .section--dark, .foot { --muted: #dfe5dc; --line: rgb(241 242 236 / .6); }
   .is-muted { color: inherit; }
@@ -555,3 +568,60 @@ h3 { font-size: clamp(26px, 2.4vw, 36px); }
 @keyframes lead-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 @keyframes badge-pop { from { scale: 0; opacity: 0; } to { scale: 1; opacity: 1; } }
 @media (max-width: 639px) { .viz__badge { width: 62px; height: 62px; font-size: .6875rem; } }
+
+/* =====================================================================================
+   Signature moments (src/fx.jsx)
+   ===================================================================================== */
+/* the hero draws in to a framed card and sinks as the page passes over it: everything after it stands above it, by page
+   order alone (no z-index, so no new stacking layer: the photo viewer inside a section still covers the nav) */
+main > .hero ~ * { position: relative; }
+main > .hero + :not(.section--surface):not(.section--dark) { background: var(--bg); }
+.hero__dim { position: absolute; inset: 0; z-index: 1; background: var(--dark); pointer-events: none; }
+
+/* the chapter line over a section's heading: its number, a short rule in turmeric, its name */
+.chapter { display: flex; align-items: center; gap: 14px; font-size: 0.9375rem; font-weight: 500; color: var(--muted); letter-spacing: .012em; }
+.chapter .num { color: var(--ink); font-weight: 650; }
+.section--dark .chapter .num, .foot .chapter .num { color: var(--cream); }
+.chapter i { width: 56px; height: 2px; border-radius: 2px; background: var(--turmeric); transform-origin: left; }
+.projects__intro .chapter { margin-bottom: 22px; }
+.promise .chapter { margin-bottom: 4px; }
+
+/* Dome: the dark section's curved rising edge */
+.dome { position: relative; }
+.dome__in { position: relative; will-change: clip-path; }
+
+/* Giant: one word across the width, its foot on the section's edge */
+.giant {
+  margin: clamp(64px, 9vw, 140px) 0 calc(var(--pad) * -1 + clamp(14px, 1.6vw, 26px)); padding-inline: var(--gut); white-space: nowrap; pointer-events: none;
+  font: 640 12vw/.76 var(--display); font-stretch: 76%; letter-spacing: -0.045em; color: var(--ink);
+}
+.giant__in { display: inline-block; }
+.giant .w { padding-bottom: .02em; margin-bottom: -.02em; }
+
+/* Leaf: the photograph opening out of the logo's leaf, held on screen while it opens */
+.leaf { position: relative; height: 260vh; margin: clamp(56px, 7vw, 112px) 0 calc(var(--pad) * -1); }
+.leaf__stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
+.leaf__mask { position: absolute; inset: -18%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; will-change: mask-size, transform; }
+.leaf__mask img { width: 100%; height: 100%; object-fit: cover; }
+.leaf__shade { position: absolute; inset: 0; background: var(--dark); pointer-events: none; }
+.leaf--still { margin-top: clamp(48px, 6vw, 96px); }
+.leaf--still img { width: 100%; aspect-ratio: 21 / 9; object-fit: cover; border-radius: var(--r-lg); }
+
+/* Marquee: a band of giant words, solid and hollow in turn, with a turmeric dot between */
+.marquee { overflow: hidden; padding: clamp(36px, 5vw, 72px) 0; background: var(--bg); border-bottom: 1px solid var(--line); }
+.marquee__track { display: flex; width: max-content; will-change: transform; }
+.marquee__row { display: flex; flex: none; }
+.marquee__word {
+  display: inline-flex; align-items: center; gap: .32em; padding-right: .32em; white-space: nowrap;
+  font: 620 clamp(68px, 11.5vw, 188px)/.9 var(--display); font-stretch: 76%; letter-spacing: -0.035em; color: var(--ink);
+}
+.marquee__word.is-hollow { color: transparent; -webkit-text-stroke: clamp(1px, .12vw, 2px) var(--ink); }
+.marquee__dot { flex: none; width: .2em; height: .2em; border-radius: 50%; background: var(--turmeric); }
+@media (prefers-contrast: more) { .marquee__word.is-hollow { color: var(--ink); -webkit-text-stroke: 0; } }
+
+/* the projects run: each card's number, large and quiet, and a live count beside the progress line */
+.pcard__text { position: relative; }
+.pcard__n { position: absolute; right: clamp(6px, .8vw, 12px); top: -0.12em; font: 620 clamp(40px, 4.4vw, 76px)/1 var(--display); font-stretch: 76%; letter-spacing: -0.03em; color: transparent; -webkit-text-stroke: 1px rgb(15 35 29 / .3); transition: color .4s, -webkit-text-stroke-color .4s; }
+.pcard:hover .pcard__n { color: var(--turmeric); -webkit-text-stroke-color: var(--turmeric); }
+.projects__count { position: absolute; right: 0; bottom: 12px; font-size: 0.9375rem; color: var(--muted); }
+.projects__count b { color: var(--ink); font-weight: 650; }

@@ -1,11 +1,12 @@
 // Shared pieces of the site: intro, cursor, nav, hero, 3D frame, visit form, footer.
 import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, useMotionValueEvent, useReducedMotion, animate } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, useMotionValueEvent, useReducedMotion, useInView, animate } from 'framer-motion';
 import { Spot } from './Orb.jsx';
 import { Link, BASE, Words, Rise, Picture, Magnetic, Arrow, EASE, SPRING, tick, useReady, useMedia, srcSet, useFocusTrap } from './lib.jsx';
 import { CONTACT } from './data.js';
 import { PAGES, ORDER, HOURS } from './content.js';
 import { webglOK } from './three/gl.js';
+import { Chapter, Dome } from './fx.jsx';
 
 const wa = (msg) => `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(msg)}`;
 const gmaps = (q) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
@@ -23,7 +24,11 @@ export function Preloader({ onDone }) {
     return () => { c.stop(); clearTimeout(t); evs.forEach(n => removeEventListener(n, skip)); };
   }, [onDone]);
   return (
-    <motion.div className="intro" exit={{ y: '-100%' }} transition={{ type: 'spring', bounce: 0, duration: 0.7 }} aria-hidden="true">
+    // it lifts off with its foot curving up, the same arc the dark sections rise in on
+    <motion.div className="intro" aria-hidden="true"
+      initial={{ borderBottomLeftRadius: '50% 0vh', borderBottomRightRadius: '50% 0vh' }}
+      exit={{ y: '-100%', borderBottomLeftRadius: '50% 26vh', borderBottomRightRadius: '50% 26vh' }}
+      transition={{ type: 'spring', bounce: 0, duration: 0.9 }}>
       <div className="intro__name">
         {'Tamala Homes'.split('').map((ch, i) => (
           <span className="w" key={i}><motion.span className="w__in" initial={{ y: '110%' }} animate={{ y: '0%' }}
@@ -135,6 +140,11 @@ export function Hero({ word, title, film, image, alt, pos }) {
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.16]);
   const lift = useTransform(scrollYProgress, [0, 1], ['0%', '-28%']);
   const fade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+  // as the page moves on, the hero draws in to a framed card with round corners, sinks slower than the page (so the next
+  // section slides up over it) and dims
+  const card = useTransform(scrollYProgress, v => { const s = (v * 4).toFixed(2); return `inset(0% ${s}% 0% ${s}% round ${(v * 48).toFixed(1)}px)`; });
+  const sink = useTransform(scrollYProgress, [0, 1], ['0%', '42%']);
+  const dim = useTransform(scrollYProgress, [0, 1], [0, 0.55]);
   // the film loads after the first paint, never for visitors who asked for less motion or less data, nor on a slow
   // connection (3G or worse): there the still poster stays, and the play button still loads the film on request
   useEffect(() => {
@@ -155,13 +165,14 @@ export function Hero({ word, title, film, image, alt, pos }) {
     if (v.paused) { delete v.dataset.paused; v.play().then(() => setPlaying(true)).catch(() => {}); } else { v.dataset.paused = '1'; v.pause(); setPlaying(false); }
   };
   return (
-    <section className="hero" ref={ref} aria-labelledby="hero-h">
+    <motion.section className="hero" ref={ref} aria-labelledby="hero-h" style={reduce ? undefined : { clipPath: card, y: sink }}>
       <motion.div className="hero__media" style={{ scale: reduce ? 1 : scale }} initial={{ scale: 1.18 }} animate={{ scale: ready ? 1 : 1.18 }} transition={{ duration: 2.2, ease: EASE }}>
         {film
           ? <video ref={video} muted loop playsInline preload="none" poster={phone ? BASE + '/media/hero-poster-720p.webp' : BASE + '/media/hero-poster-1600.webp'} aria-hidden="true" />
           : <img src={`${BASE}/media/img/${image}`} srcSet={srcSet(`${BASE}/media/img/${image}`)} sizes="100vw" alt={alt} style={{ objectPosition: pos }} fetchpriority="high" />}
       </motion.div>
       <div className="hero__shade" aria-hidden="true" />
+      {!reduce && <motion.i className="hero__dim" aria-hidden="true" style={{ opacity: dim }} />}
       {film && (
         <button className="hero__pause" type="button" onClick={toggle} aria-label={playing ? 'Pause the film' : 'Play the film'} data-cursor={playing ? 'Pause' : 'Play'}>
           {playing ? <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 2h3v10H3zM8 2h3v10H8z" /></svg> : <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 2v10l8-5z" /></svg>}
@@ -180,7 +191,7 @@ export function Hero({ word, title, film, image, alt, pos }) {
         </motion.div>
       </motion.div>
       <motion.span className="hero__scroll" aria-hidden="true" style={{ opacity: fade }}><i />Scroll</motion.span>
-    </section>
+    </motion.section>
   );
 }
 
@@ -217,9 +228,10 @@ export function Viz({ kind, poster, alt, what, load, onView, mode, cursor = 'Dra
 }
 
 /* ---------- section heading ---------- */
-export function Head({ id, parts, text, lead }) {
+export function Head({ id, parts, text, lead, chapter }) {
   return (
     <div className="head">
+      {chapter && <Chapter n={chapter[0]}>{chapter[1]}</Chapter>}
       <Words as="h2" id={id} parts={parts} text={text} />
       {lead && <Rise as="p" delay={0.15}>{lead}</Rise>}
     </div>
@@ -227,7 +239,7 @@ export function Head({ id, parts, text, lead }) {
 }
 
 /* ---------- the visit form: it opens the visitor's email app with the request filled in ---------- */
-export function Visit({ project, heading, lead, photo, spot }) {
+export function Visit({ project, heading, lead, photo, spot, chapter }) {
   const [v, setV] = useState({ name: '', phone: '', project: project || 'Arundelpet', date: '' });
   const [err, setErr] = useState({}); const [sent, setSent] = useState(false);
   const set = k => e => { setV(s => ({ ...s, [k]: e.target.value })); setErr(s => ({ ...s, [k]: undefined })); };
@@ -261,7 +273,7 @@ export function Visit({ project, heading, lead, photo, spot }) {
   return (
     <section className="section section--surface" id="visit" aria-labelledby="visit-h">
       <div className={spot ? 'wrap has-spot' : 'wrap'}>{spot && <Spot shape={spot} />}
-        <Head id="visit-h" text={heading} lead={lead} />
+        <Head id="visit-h" text={heading} lead={lead} chapter={chapter} />
         <div className="split">
           <Rise as="form" className="form" onSubmit={submit} noValidate>
             {field('name', 'Name', { type: 'text', autoComplete: 'name' })}
@@ -296,13 +308,16 @@ export function Visit({ project, heading, lead, photo, spot }) {
 }
 
 /* ---------- footer ---------- */
-export function Footer() {
+// the close of every page: the invitation, the office and its hours, then the name set across a photograph of towers at
+// dusk, its letters rising in as it arrives. A dark footer after a light section rises in on a curved edge (Dome).
+export function Footer({ under = 'var(--surface)' }) {
   const ref = useRef(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end end'] });
-  const x = useTransform(scrollYProgress, [0, 1], ['-12%', '0%']);
+  const seen = useInView(ref, { once: true, margin: '0px 0px -12% 0px' });
   const reduce = useReducedMotion();
-  return (
-    <footer className="foot" id="contact" ref={ref}>
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end end'] });
+  const lift = useTransform(scrollYProgress, [0, 1], ['-14%', '0%']);
+  const foot = (
+    <footer className="foot" id="contact">
       <div className="wrap">
         <div className="foot__top">
           <div>
@@ -335,14 +350,24 @@ export function Footer() {
             </ul>
           </Rise>
         </div>
-        <div className="foot__legal">
+      </div>
+      <div className="foot__stage" ref={ref}>
+        <motion.img className="foot__photo" src={`${BASE}/media/img/evening-towers.webp`} srcSet={srcSet(`${BASE}/media/img/evening-towers.webp`)} sizes="100vw"
+          alt="" aria-hidden="true" loading="lazy" style={{ y: reduce ? 0 : lift }} />
+        <p className="foot__word" aria-hidden="true">
+          {'Tamala Homes'.split('').map((ch, i) => (
+            <span className="w" key={i}><motion.span className="w__in" initial={reduce ? false : { y: '104%' }} animate={{ y: seen || reduce ? '0%' : '104%' }}
+              transition={{ duration: 1.2, ease: EASE, delay: 0.035 * i }}>{ch === ' ' ? '\u00a0' : ch}</motion.span></span>
+          ))}
+        </p>
+        <div className="wrap foot__legal">
           <span>&copy; 2026 Tamala Homes</span>
           <span><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><Link to="/credits">Photographs and film via Pexels</Link></span>
         </div>
       </div>
-      <motion.p className="foot__word" aria-hidden="true" style={{ x: reduce ? 0 : x }}>Tamala Homes</motion.p>
     </footer>
   );
+  return under ? <Dome under={under}>{foot}</Dome> : foot;
 }
 
 export { gmaps, wa };

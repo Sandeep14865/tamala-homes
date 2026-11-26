@@ -1,12 +1,13 @@
 // Home: film hero, a pinned horizontal run through the three projects, the 3D map, the promise,
 // the four build stages, amenities, the visit form.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useInView, useReducedMotion, LayoutGroup } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform, useInView, useReducedMotion, useMotionValueEvent, LayoutGroup } from 'framer-motion';
 import { Link, BASE, Words, Rise, Picture, Counter, Arrow, Tilt, EASE, SPRING, useMedia, srcSet, useNear } from './lib.jsx';
 import { Nav, Hero, Head, Visit, Footer, gmaps } from './components.jsx';
 import { PROJECTS, MAP } from './data.js';
 import { PAGES, ORDER, STAGES, AMENITIES } from './content.js';
 import { Orb, Spot } from './Orb.jsx';
+import { Dome, Leaf, Marquee, Giant, Chapter } from './fx.jsx';
 
 const LINKS = [['Projects', '#projects'], ['Locations', '#map'], ['Building', '#build'], ['Amenities', '#amenities']];
 const TOWERS = Object.values(PROJECTS).reduce((a, p) => a + p.towers.length, 0);
@@ -27,6 +28,9 @@ function Projects() {
   }, [pin]);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
   const x = useTransform(scrollYProgress, v => -v * dist);
+  // which card leads the run, for the counter beside the progress line
+  const [card, setCard] = useState(1);
+  useMotionValueEvent(scrollYProgress, 'change', v => setCard(Math.min(ORDER.length, 1 + Math.floor(v * ORDER.length * 0.999))));
   // the run moves sideways only as the page scrolls, so a card reached with Tab could sit off the screen: scroll the
   // page to where that card stands at the left edge (the frame's own sideways jump is undone in onScroll below)
   const onFocus = e => {
@@ -47,7 +51,10 @@ function Projects() {
       <div className="projects__sticky" onScroll={e => { if (e.currentTarget.scrollLeft) e.currentTarget.scrollLeft = 0; }}>
         <motion.div className="projects__track" ref={track} style={{ x: pin ? x : 0 }} onFocus={onFocus}>
           <div className="projects__intro">
+            <div>
+            <Chapter n={1}>Projects</Chapter>
             <Words as="h2" id="projects-h" parts={[{ t: 'Three projects in Guntur.' }, { t: 'One ready, one rising, one about to open.', muted: true }]} />
+            </div>
             <dl className="stats">
               <Rise delay={0.1}><dd><Counter to={3} /></dd><dt>Projects</dt></Rise>
               <Rise delay={0.2}><dd><Counter to={TOWERS} /></dd><dt>Towers</dt></Rise>
@@ -61,6 +68,7 @@ function Projects() {
                 <Tilt className="pcard__body">
                   <Picture className="pcard__pic" src={`${BASE}/media/img/${p.cardImg}`} alt={p.cardAlt} pos={p.cardPos} sizes="(max-width: 1023px) 100vw, 54vw" strength={pin ? 0 : 6} />
                   <div className="pcard__text">
+                    <Rise as="span" className="pcard__n num" aria-hidden="true" delay={0.05}>{String(i + 1).padStart(2, '0')}</Rise>
                     <Rise as="span" className="chip" delay={0.1}>{p.status}</Rise>
                     <Words as="h3" text={p.short} delay={0.1} />
                     <Rise as="p" delay={0.25}>{p.card}</Rise>
@@ -71,7 +79,12 @@ function Projects() {
             );
           })}
         </motion.div>
-        {pin && <div className="projects__bar" aria-hidden="true"><motion.i style={{ scaleX: scrollYProgress }} /></div>}
+        {pin && (
+          <div className="projects__bar" aria-hidden="true">
+            <motion.i style={{ scaleX: scrollYProgress }} />
+            <span className="projects__count num"><b>{String(card).padStart(2, '0')}</b> / {String(ORDER.length).padStart(2, '0')}</span>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -100,7 +113,7 @@ function MapSection() {
   return (
     <section className="section section--surface" id="map" aria-labelledby="map-h">
       <div className="wrap has-spot"><Spot shape="pin" />
-        <Head id="map-h" text="Where we build in Guntur" lead="Choose a project, then a place you drive to every week to see the way there." />
+        <Head id="map-h" chapter={[2, 'Locations']} text="Where we build in Guntur" lead="Choose a project, then a place you drive to every week to see the way there." />
         <div className="split split--viz split--map">
           <div className="panel">
             <p className="map__from">Drive times from <AnimatePresence mode="popLayout" initial={false}>
@@ -156,6 +169,8 @@ function MapSection() {
           </div>
         </div>
       </div>
+      {/* the city's name across the whole width: the close of the map, and the ground the promise rises out of */}
+      <Giant text="Guntur" />
     </section>
   );
 }
@@ -172,9 +187,10 @@ function Promise_() {
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.82', 'start 0.18'] });
   return (
+    <Dome under="var(--surface)">
     <section className="section section--dark promise" id="promise" aria-label="Our promise">
       <div className="wrap has-spot"><Spot shape="ring" />
-        <Rise as="p" className="label">How we hand over</Rise>
+        <Chapter n={3}>How we hand over</Chapter>
         {/* screen readers get the sentence whole; the word-by-word copy is only for the eye */}
         <p className="promise__text" ref={ref}>
           <span className="sr-only">{PROMISE.join(' ')}</span>
@@ -185,9 +201,11 @@ function Promise_() {
               : <span key={i} className={strong ? 'is-strong' : undefined} aria-hidden="true"><Lit progress={scrollYProgress} i={i} n={PROMISE.length}>{w}</Lit></span>;
           })}
         </p>
-        <Picture className="promise__pic" sizes="100vw" src={BASE + "/media/img/living-warm.webp"} alt="A finished living room with a white sofa, wood panelling and a dining table by the window" pos="50% 60%" strength={10} />
       </div>
+      {/* the handover, pictured: a finished living room opening out of the Tamala leaf */}
+      <Leaf src={BASE + "/media/img/living-warm.webp"} alt="A finished living room with a white sofa, wood panelling and a dining table by the window" pos="50% 60%" />
     </section>
+    </Dome>
   );
 }
 
@@ -214,7 +232,7 @@ function Stages() {
   return (
     <section className="section section--surface" id="build" aria-labelledby="build-h">
       <div className="wrap has-spot"><Spot shape="brick" />
-        <Head id="build-h" text="Four stages from booking to keys" />
+        <Head id="build-h" chapter={[4, 'Building']} text="Four stages from booking to keys" />
         <div className="stages">
           <div className="stages__sticky">
             <div className="stages__count num" aria-hidden="true">
@@ -253,7 +271,7 @@ function Amenities() {
   return (
     <section className="section amenities" id="amenities" aria-labelledby="amenities-h">
       <div className="wrap has-spot"><Spot shape="sun" />
-        <Head id="amenities-h" text="Pools, clubhouse and play areas" lead="Shared spaces on the ground and the terrace, kept by our own maintenance team for the first two years." />
+        <Head id="amenities-h" chapter={[5, 'Amenities']} text="Pools, clubhouse and play areas" lead="Shared spaces on the ground and the terrace, kept by our own maintenance team for the first two years." />
         <motion.ul className="roll" initial="away" whileInView="here" viewport={{ once: true, margin: '0px 0px -20% 0px' }}>
           {AMENITIES.map((m, i) => (
             <li key={m[0]} className="roll__item">
@@ -288,8 +306,9 @@ export default function Home() {
         <MapSection />
         <Promise_ />
         <Stages />
+        <Marquee words={['Lap pool', 'Clubhouse', 'Garden pavilion', 'Play area', 'Terrace garden', 'Gym']} />
         <Amenities />
-        <Visit spot="target" heading="Site visits, seven days a week" lead="Tell us the project and a day. We call to confirm a time and send a car from the office in Brodipet."
+        <Visit spot="target" chapter={[6, 'Visit']} heading="Site visits, seven days a week" lead="Tell us the project and a day. We call to confirm a time and send a car from the office in Brodipet."
           photo={['city-view.webp', 'A bright flat with a breakfast counter and a window onto apartment towers']} />
       </main>
       <Footer />

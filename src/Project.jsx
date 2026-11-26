@@ -2,6 +2,7 @@
 // Google map, construction progress (when building), the visit form, and the way to the other projects.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup, useMotionValue, useTransform } from 'framer-motion';
+import { Dome, Marquee, Giant } from './fx.jsx';
 import { Link, BASE, Words, Rise, Picture, Counter, Arrow, EASE, SPRING, FLICK, project, tick, useTilt, srcSet, useNear, useFocusTrap } from './lib.jsx';
 import { Nav, Hero, Viz, Head, Visit, Footer, gmaps, wa } from './components.jsx';
 import { PROJECTS, PLANS, MAP, STATUS, flatsFor } from './data.js';
@@ -47,7 +48,7 @@ function Availability({ page }) {
   return (
     <section className="section section--surface" id="availability" aria-labelledby="availability-h">
       <div className="wrap">
-        <Head id="availability-h" text={`Flats free ${page.inPlace} today`} lead="Tap a flat in the tower, or choose one below. The chosen flat lights up in the colour of its status." />
+        <Head id="availability-h" chapter={[2, 'Availability']} text={`Flats free ${page.inPlace} today`} lead="Tap a flat in the tower, or choose one below. The chosen flat lights up in the colour of its status." />
         <div className="split split--viz">
           <Rise className="panel">
             <Seg label="Show flats" value={filter} onChange={setFilter} options={[['all', 'All'], ['2', '2 BHK'], ['3', '3 BHK']]} />
@@ -117,7 +118,7 @@ function Plans({ page }) {
   return (
     <section className="section" id="plans" aria-labelledby="plans-h">
       <div className="wrap">
-        <Head id="plans-h" text="Floor plans for 2 and 3 BHK" lead="Turn the plan or switch to the layout. Every flat has a pooja room." />
+        <Head id="plans-h" chapter={[3, 'Floor plans']} text="Floor plans for 2 and 3 BHK" lead="Turn the plan or switch to the layout. Every flat has a pooja room." />
         <div className="split split--viz">
           <Rise className="panel">
             <div className="seg-row">
@@ -227,7 +228,7 @@ function Gallery({ page }) {
   return (
     <section className="section section--surface" id="gallery" aria-labelledby="gallery-h">
       <div className="wrap">
-        <Head id="gallery-h" text="Inside a finished flat" />
+        <Head id="gallery-h" chapter={[4, 'Inside']} text="Inside a finished flat" />
         <div className="wall">
           {g.map(([src, alt], i) => <WallItem key={src} src={src} alt={alt} i={i} id={page.key} onOpen={() => setOpen(i)} />)}
         </div>
@@ -242,7 +243,7 @@ function Progress({ page }) {
   return (
     <section className="section section--surface" id="progress" aria-labelledby="progress-h">
       <div className="wrap">
-        <Head id="progress-h" text="Construction progress" lead="Where the work stands this month. Owners get a site walk with our engineer every quarter." />
+        <Head id="progress-h" chapter={[6, 'Progress']} text="Construction progress" lead="Where the work stands this month. Owners get a site walk with our engineer every quarter." />
         <div className="split">
           <ul className="progress">
             {page.progress.map(([k, v], i) => (
@@ -266,9 +267,10 @@ function Others({ page }) {
   const others = ORDER.filter(k => k !== page.key).map(k => PAGES[k]);
   const [h, setH] = useState(-1);
   return (
+    <Dome under="var(--surface)">
     <section className="section section--dark others" aria-labelledby="others-h">
       <div className="wrap">
-        <Head id="others-h" text="Other projects in Guntur" />
+        <Head id="others-h" chapter={[page.progress ? 8 : 7, 'More projects']} text="Other projects in Guntur" />
         <ul className="others__list" onMouseLeave={() => setH(-1)}>
           {others.map((o, i) => (
             <Rise as="li" key={o.key} delay={0.1 * i}>
@@ -283,6 +285,7 @@ function Others({ page }) {
         </ul>
       </div>
     </section>
+    </Dome>
   );
 }
 
@@ -290,6 +293,7 @@ export default function Project({ page }) {
   useEffect(() => { document.title = `${page.name}: ${page.title}`; }, [page]);
   const place = `${page.place}, Guntur, Andhra Pradesh`;
   const mapBox = useRef(null), mapNear = useNear(mapBox);
+  const fact = k => (page.facts.find(f => f[0] === k) || [, ''])[1];
   return (
     <>
       <Nav links={LINKS} />
@@ -298,7 +302,7 @@ export default function Project({ page }) {
 
         <section className="section" id="overview" aria-labelledby="overview-h">
           <div className="wrap">
-            <Head id="overview-h" text={page.overviewH} lead={page.overviewP} />
+            <Head id="overview-h" chapter={[1, 'Overview']} text={page.overviewH} lead={page.overviewP} />
             <div className="split">
               <ul className="rows rows--facts">
                 {page.facts.map(([k, v], i) => (
@@ -310,13 +314,15 @@ export default function Project({ page }) {
           </div>
         </section>
 
+        {/* the project's name and facts in a band of giant words that drifts with the scroll */}
+        <Marquee words={[page.short, fact('Status'), `${fact('Flats')} flats`, '2 and 3 BHK']} />
         <Availability page={page} />
         <Plans page={page} />
         <Gallery page={page} />
 
         <section className="section" id="location" aria-labelledby="location-h">
           <div className="wrap">
-            <Head id="location-h" text={`Getting around from ${page.short}`} lead="Drive times on a weekday morning." />
+            <Head id="location-h" chapter={[5, 'Location']} text={`Getting around from ${page.short}`} lead="Drive times on a weekday morning." />
             <div className="split">
               <div className="panel">
                 <ul className="rows">
@@ -332,14 +338,15 @@ export default function Project({ page }) {
               </Rise>
             </div>
           </div>
+          <Giant text={page.short} />
         </section>
 
         {page.progress && <Progress page={page} />}
-        <Visit project={page.short} heading={`Visit ${page.short} this week`} lead="Tell us a day. We call to confirm a time and send a car from our office in Brodipet."
+        <Visit project={page.short} chapter={[page.progress ? 7 : 6, 'Visit']} heading={`Visit ${page.short} this week`} lead="Tell us a day. We call to confirm a time and send a car from our office in Brodipet."
           photo={['build-plans.webp', 'Two men reading building plans spread on the bonnet of a car at a site']} />
         <Others page={page} />
       </main>
-      <Footer />
+      <Footer under={null} />
     </>
   );
 }

@@ -17,6 +17,7 @@ React 18 single-page app built with Vite 6 (plain JSX, no TypeScript), Framer Mo
 | `src/Home.jsx` | Home sections: projects, map, promise, build stages, amenities, visit |
 | `src/Project.jsx` | Project pages |
 | `src/Orb.jsx` | The travelling turmeric shape on the home page |
+| `src/fx.jsx` | Signature moments: `Dome`, `Leaf`, `Marquee`, `Giant`, `Chapter` |
 | `src/Legal.jsx` | Privacy, terms, credits |
 | `src/content.js`, `src/data.js` | Page copy; flats, plans, map, contacts |
 | `src/three/*` | Imperative three.js scenes, each with `dispose()` |
@@ -45,13 +46,22 @@ Routes: `/`, `/projects/<key>`, `/privacy`, `/terms`, `/credits`.
 
 - **Colours:** limewash `#f1f2ec` (background), tamala green `#0f231d` (ink and dark sections), action blue `#295290`, muted `#6f7f77`, turmeric `#e0a526`.
 - **Type:** Anek Latin, condensed (`font-stretch: 76%`) for display text.
-- **Hero:** full-screen film or photo, the giant name and one glass button. Nothing else.
+- **Hero:** full-screen film or photo, the giant name and one glass button. Nothing else. As the page moves on it draws in to a round-cornered card, sinks and dims while the next section slides over it (sections after it stand above it by page order only: no z-index, or the photo viewer ends up under the nav).
+- **Nav:** a full-width bar over the hero; past it, the bar draws in to a floating glass capsule.
 - **One yellow:** turmeric `#e0a526` (`--turmeric`) is the only yellow on the site, in every section. Don't add darker or lighter shades of it, even for contrast (the client's choice).
 - **Build stages:** the heading and the four stage titles are turmeric; photos change with a wipe, never a blend.
 - **Contrast:** text must pass WCAG AA (muted grey is `#56665e` for that reason). Check new colour pairs before using them. The one exception is turmeric text on the light background, kept by the client's choice.
 - **Enquiries go through WhatsApp:** the visit form and the "Ask about this flat" button open a pre-filled WhatsApp message; email is only a fallback link.
 - **Floor plans add up:** carpet area is worked out from the drawn rooms and shown next to the balcony and the super built-up figure. If you change a plan, the drawn rooms must stay below the super built-up area.
 - **Raised sheets:** cards and panels float a layer above the page, sharing `--sheet`, `--lift` and `--edge` in `styles.css` (project cards, flat panel, maps, 3D frames, visit form and photo, gallery photos, amenity discs). Things you click as a whole (project cards, gallery photos) also lift and lean toward the mouse (`Tilt` / `useTilt` in `lib.jsx`); maps and 3D views you drag stay level. On touch they rest raised and still. A clip-path cuts off a shadow, so reveal masks are dropped once open.
+- **Signature moments (`src/fx.jsx`)**, each resting fully shown under reduced motion:
+  - every section heading carries a chapter line (`Head chapter={[n, 'Name']}`): number, a turmeric rule that draws in, name
+  - dark sections after light ones (the promise, the footer, other projects) rise in on a curved edge (`Dome`, `under` = the colour above)
+  - the promise photo opens out of the Tamala leaf to full screen (`Leaf`)
+  - one giant word fills the width between the gutters, measured to fit (`Giant`): "Guntur" closing the map, the project's name closing its location section
+  - a band of giant words drifts with the scroll (`Marquee`): amenities on the home page, the project's facts on its page
+  - the footer ends on the name set across towers at dusk; the intro lifts off with a curved foot
+  - the projects run shows each card's number and a live count beside its progress line
 - **Tower view:** only the selected flat is coloured.
 - **Map section:** a Google Maps embed with project tabs and drive-time rows that draw the route (keyless embed URLs).
 - **Amenities:** round photos that roll in; a swipe row on phones.
