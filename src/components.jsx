@@ -158,68 +158,104 @@ const PauseButton = ({ film }) => (
   </button>
 );
 
-/* ---------- the home hero: the aerial film plays inside the letters of the name, on the dark ground. Scrolling dives
-   through the l of Tamala until the film fills the screen; it holds there with the headline, then leaves as a card
-   with the projects sliding over it ---------- */
+/* ---------- the home hero: the aerial film plays inside the letters of the name, cut out of the solid green ground.
+   Scrolling dives through the l of Tamala until the film fills the screen; it holds there with the headline, then leaves
+   as a card with the projects sliding over it.
+   The letters are real holes (an SVG mask), so the ground stays clean and their edges sharp, and a fine cream outline
+   keeps the name readable whatever the film shows inside it; the outline goes as the dive begins. The dive narrows the
+   SVG's viewBox around the l rather than scaling a picture of it, so the edges stay crisp all the way in. ---------- */
+const clamp01 = v => Math.min(1, Math.max(0, v));
 export function FilmHero({ word, title }) {
   const ready = useReady();
   const reduce = useReducedMotion();
   const phone = useMedia('(max-width: 899px)');
-  const track = useRef(null), video = useRef(null), type = useRef(null), anchor = useRef(null);
+  const track = useRef(null), stage = useRef(null), video = useRef(null), svg = useRef(null), probe = useRef(null);
   const film = useFilm(video);
-  const [origin, setOrigin] = useState('50% 50%');
-  const max = useRef(60);
+  const lines = phone ? word.split(' ') : [word];
+  const [box, setBox] = useState(null);          // the name laid out in the stage's own pixels
+  const geo = useRef(null);
   const { scrollYProgress: p } = useScroll({ target: track, offset: ['start start', 'end end'] });
   const { scrollYProgress: q } = useScroll({ target: track, offset: ['end end', 'end start'] });
-  // an even zoom (each step of scroll multiplies the scale by the same amount) through the first part of the hold
-  const zoom = useTransform(p, v => Math.pow(max.current, Math.min(1, Math.max(0, v / 0.7))));
-  const typeFade = useTransform(p, [0.58, 0.72], [1, 0]);
+  // an even zoom (each step of scroll multiplies the depth by the same amount) through the first part of the hold
+  const zoom = useTransform(p, v => (geo.current ? Math.pow(geo.current.max, clamp01(v / 0.7)) : 1));
+  const fade = useTransform(p, [0.58, 0.72], [1, 0]);
+  const edge = useTransform(p, [0, 0.14], [1, 0]);
   const cue = useTransform(p, [0, 0.08], [1, 0]);
-  // while the film is only inside the letters it runs brighter, so dark scenes never empty the letters (and its shadows
-  // stay lighter than the ground around them); it settles to its own exposure as the dive opens it to the full screen
+  // while the film is only inside the letters it runs brighter, so dark scenes never empty them; it settles to its own
+  // exposure as the dive opens it to the full screen
   const glow = useTransform(p, [0, 0.62], [0, 1]);
-  const exposure = useTransform(glow, g => `brightness(${(1.55 - 0.55 * g).toFixed(3)}) contrast(${(0.86 + 0.14 * g).toFixed(3)}) saturate(${(1.08 - 0.08 * g).toFixed(3)})`);
+  const exposure = useTransform(glow, g => `brightness(${(1.45 - 0.45 * g).toFixed(3)}) contrast(${(0.9 + 0.1 * g).toFixed(3)})`);
   const card = useTransform(q, v => { const s = (v * 4).toFixed(2); return `inset(0% ${s}% 0% ${s}% round ${(v * 48).toFixed(1)}px)`; });
   const sink = useTransform(q, [0, 1], ['0%', '42%']);
   const dim = useTransform(q, [0, 1], [0, 0.55]);
-  // the dive aims at the middle of the l's stem; how far to zoom depends on how thick the stem is on this screen
+  // the camera: depth s around the l's stem
+  const aim = s => {
+    const g = geo.current, el = svg.current;
+    if (!g || !el) return;
+    el.setAttribute('viewBox', `${(g.ax - g.ax / s).toFixed(2)} ${(g.ay - g.ay / s).toFixed(2)} ${(g.w / s).toFixed(2)} ${(g.h / s).toFixed(2)}`);
+  };
+  useMotionValueEvent(zoom, 'change', s => { if (!reduce) aim(s); });
+  // lay the name out: sized to the width, centred a little above the middle, the l of Tamala found for the dive
   useLayoutEffect(() => {
-    const measure = () => {
-      const t = type.current, a = anchor.current;
-      if (!t || !a) return;
-      let x = 0, y = 0, el = a;
-      while (el && el !== t) { x += el.offsetLeft; y += el.offsetTop; el = el.offsetParent; }
-      setOrigin(`${(x + a.offsetWidth / 2).toFixed(1)}px ${(y + a.offsetHeight * 0.5).toFixed(1)}px`);
-      const fs = parseFloat(getComputedStyle(a).fontSize) || 200;
-      max.current = Math.max(24, (Math.hypot(innerWidth, innerHeight) * 1.1) / (fs * 0.1));
+    const el = stage.current, pr = probe.current;
+    if (!el || !pr) return;
+    const layout = () => {
+      const w = el.clientWidth, h = el.clientHeight;
+      if (!w || !h) return;
+      const gut = Math.min(80, Math.max(20, w * 0.055)), lh = 0.84;
+      pr.setAttribute('font-size', '100');
+      const widest = Math.max(...lines.map(l => { pr.textContent = l; return pr.getComputedTextLength(); })) || 1;
+      let fs = (100 * (w - 2 * gut) * (phone ? 0.98 : 0.88)) / widest;
+      fs = Math.min(fs, (h * 0.5) / (lines.length * lh));
+      const top = h * (phone ? 0.42 : 0.46) - (lines.length * fs * lh) / 2;
+      const ys = lines.map((_, i) => top + (i + 0.86) * fs * lh);
+      pr.setAttribute('font-size', String(fs)); pr.textContent = lines[0];
+      const len = pr.getComputedTextLength(), li = lines[0].indexOf('l');
+      let ax = w / 2;
+      if (li >= 0) { const ex = pr.getExtentOfChar(li); ax = w / 2 - len / 2 + ex.x + ex.width / 2; }
+      const g = { w, h, fs, ys, ax, ay: ys[0] - fs * 0.34, max: Math.max(24, (Math.hypot(w, h) * 1.15) / (fs * 0.095)) };
+      geo.current = g; setBox(g); aim(reduce ? 1 : zoom.get());
     };
-    measure(); document.fonts?.ready.then(measure);
-    addEventListener('resize', measure);
-    return () => removeEventListener('resize', measure);
-  }, [phone]);
-  const lines = word.split(' ');
+    layout(); document.fonts?.ready.then(layout);
+    const ro = new ResizeObserver(layout); ro.observe(el);
+    return () => ro.disconnect();
+  }, [phone, word]);   // eslint-disable-line react-hooks/exhaustive-deps
   let k = 0;
   return (
     <section className={`fhero${reduce ? ' is-still' : ''}`} ref={track} aria-labelledby="hero-h">
-      <motion.div className="fhero__stage" style={reduce ? undefined : { clipPath: card, y: sink }}>
+      <motion.div className="fhero__stage" ref={stage} style={reduce ? undefined : { clipPath: card, y: sink }}>
         <motion.video ref={video} className="fhero__film" muted loop playsInline preload="none" poster={film.poster} aria-hidden="true"
           style={{ filter: exposure }} />
-        <motion.div className="fhero__type" ref={type} aria-hidden="true" style={reduce ? undefined : { scale: zoom, opacity: typeFade, transformOrigin: origin }}>
-          <p className="fhero__word">
-            {lines.map((w, li) => (
-              <span className="fhero__line" key={li}>
-                {w.split('').map((ch, i) => {
-                  const d = 0.2 + 0.045 * k++;
-                  return (
-                    <span className="w" key={i} ref={li === 0 && i === w.indexOf('l') ? anchor : undefined}>
-                      <motion.span className="w__in" initial={{ y: '108%' }} animate={{ y: ready ? '0%' : '108%' }} transition={{ duration: 1.25, ease: EASE, delay: d }}>{ch}</motion.span>
-                    </span>
-                  );
-                })}
-              </span>
-            ))}
-          </p>
-        </motion.div>
+        <motion.svg ref={svg} className="fhero__svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice" style={reduce ? undefined : { opacity: fade }}>
+          <defs>
+            <mask id="fhero-cut">
+              {/* sized in the stage's own pixels with a wide margin: the dive's viewBox never leaves the stage, but percentages
+                  would shrink with it */}
+              {box && <rect x={-box.w} y={-box.h} width={box.w * 3} height={box.h * 3} fill="#fff" />}
+              {box && lines.map((l, i) => (
+                <text key={i} className="fhero__letters" x={box.w / 2} y={box.ys[i]} fontSize={box.fs} textAnchor="middle">
+                  {l.split('').map((ch, j) => {
+                    const d = 0.25 + 0.07 * k++;
+                    // each letter develops: white in the mask (solid ground) to black (a window onto the film)
+                    return <motion.tspan key={j} initial={{ fill: '#ffffff' }} animate={{ fill: ready ? '#000000' : '#ffffff' }} transition={{ duration: 0.9, ease: EASE, delay: d }}>{ch}</motion.tspan>;
+                  })}
+                </text>
+              ))}
+            </mask>
+          </defs>
+          {box ? <rect x={-box.w} y={-box.h} width={box.w * 3} height={box.h * 3} fill="#0f231d" mask="url(#fhero-cut)" />
+               : <rect width="100%" height="100%" fill="#0f231d" />}
+          {box && (
+            <motion.g style={{ opacity: reduce ? 1 : edge }}>
+              <motion.g initial={{ opacity: 0 }} animate={{ opacity: ready ? 1 : 0 }} transition={{ duration: 1.2, ease: EASE, delay: 0.9 }}>
+                {lines.map((l, i) => (
+                  <text key={i} className="fhero__letters fhero__edge" x={box.w / 2} y={box.ys[i]} fontSize={box.fs} textAnchor="middle" vectorEffect="non-scaling-stroke">{l}</text>
+                ))}
+              </motion.g>
+            </motion.g>
+          )}
+          <text ref={probe} className="fhero__letters" x="0" y="-2000" visibility="hidden" />
+        </motion.svg>
         {!reduce && <motion.i className="hero__dim" aria-hidden="true" style={{ opacity: dim }} />}
         <PauseButton film={film} />
         <motion.div className="wrap fhero__foot" initial={{ opacity: 0, y: 20 }} animate={{ opacity: ready ? 1 : 0, y: ready ? 0 : 20 }} transition={{ duration: 0.9, ease: EASE, delay: 1.1 }}>

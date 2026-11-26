@@ -720,19 +720,13 @@ main > .fhero + :not(.section--surface):not(.section--dark) { background: var(--
 .fhero.is-still { height: 100svh; }
 .fhero__stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; isolation: isolate; background: var(--dark); }
 .fhero__film { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-/* the name in white on the dark ground, blended so that only the film shows through the white: letters of moving film */
-.fhero__type { position: absolute; inset: 0; display: grid; place-items: center; background: var(--dark); color: #fff; mix-blend-mode: darken; will-change: transform, opacity; }
-.fhero__word { margin: 0 0 4vh; text-align: center; white-space: nowrap; font-size: calc((100vw - 2 * var(--gut)) / 4.9); line-height: .8; letter-spacing: -0.035em; }
-.fhero__line + .fhero__line::before { content: "\00a0"; }
-.fhero__word .w { padding-block: .06em .1em; margin-block: -.06em -.1em; }
+/* the name cut out of the green ground (an SVG mask): the film shows only through the letters, a fine cream line round them */
+.fhero__svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
+.fhero__letters { font-family: var(--brand); font-weight: 700; font-stretch: 76%; letter-spacing: -0.03em; }
+.fhero__edge { fill: none; stroke: rgb(241 242 236 / .55); stroke-width: 1.25px; }
 .fhero__foot { position: absolute; left: 0; right: 0; bottom: clamp(36px, 6vh, 72px); z-index: 2; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px 32px; flex-wrap: wrap; }
 .fhero__title { max-width: 17ch; font-size: clamp(24px, 2.6vw, 42px); line-height: 1.02; color: var(--cream); text-shadow: 0 2px 24px rgb(15 35 29 / .5); }
 .fhero .hero__scroll { bottom: auto; top: 50%; translate: 0 -50%; }
-@media (max-width: 899px) {
-  .fhero__line { display: block; }
-  .fhero__line + .fhero__line::before { content: none; }
-  .fhero__word { font-size: calc((100vw - 2 * var(--gut)) / 2.85); line-height: .84; margin-bottom: 14vh; }
-}
 
 /* ---------- the day picker ---------- */
 fieldset.field { margin: 0; padding: 0; border: 0; min-width: 0; }
